@@ -1,5 +1,6 @@
 import {json} from '@shopify/remix-oxygen';
 import {useLoaderData, Link} from '@remix-run/react';
+import "../styles/Policies.css"
 
 /**
  * @param {LoaderFunctionArgs}
@@ -22,7 +23,7 @@ export default function Policies() {
   return (
     <div className="policies">
       <h1>Policies</h1>
-      <div>
+      <div className='policy-index-container'>
         {policies.map((policy) => {
           if (!policy) return null;
           return (

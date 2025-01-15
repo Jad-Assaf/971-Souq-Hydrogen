@@ -3,9 +3,29 @@ import {hydrogen} from '@shopify/hydrogen/vite';
 import {oxygen} from '@shopify/mini-oxygen/vite';
 import {vitePlugin as remix} from '@remix-run/dev';
 import tsconfigPaths from 'vite-tsconfig-paths';
+import tailwindcss from '@tailwindcss/vite';
+import path from 'path'; // Import path for alias resolution
 
 export default defineConfig({
   plugins: [
+    tailwindcss({
+      theme: {
+        fontFamily: {
+          sans: [
+            'Montserrat',
+            'system-ui',
+            '-apple-system',
+            'BlinkMacSystemFont',
+            'Segoe UI',
+            'Roboto',
+            'Helvetica Neue',
+            'Arial',
+            'Noto Sans',
+            'sans-serif',
+          ],
+        },
+      },
+    }),
     hydrogen(),
     oxygen(),
     remix({
@@ -18,9 +38,21 @@ export default defineConfig({
     }),
     tsconfigPaths(),
   ],
+  resolve: {
+    alias: {
+      '~': path.resolve(__dirname, 'app'), // or 'src' if that’s your main directory
+    },
+  },
   build: {
-    // Allow a strict Content-Security-Policy
-    // withtout inlining assets as base64:
+    // rollupOptions: {
+    //   external: [
+    //     '~/components/icons',
+    //     '~/components/checkbox',
+    //     '~/lib/const',
+    //     '~/lib/cn',
+    //     '~/lib/filter',
+    //   ],
+    // },
     assetsInlineLimit: 0,
   },
   ssr: {
@@ -35,7 +67,12 @@ export default defineConfig({
        * Include 'example-dep' in the array below.
        * @see https://vitejs.dev/config/dep-optimization-options
        */
-      include: [],
+      include: [
+        'react-microsoft-clarity',
+        'react-lazy-load-image-component',
+        'prop-types',
+        'matchmediaquery',
+      ],
     },
   },
 });

@@ -1,0 +1,116 @@
+@media (max-width: 1024px){
+    .ImageArrows{
+        width: 95vw !important;
+        transform: translateX(-12.5%);
+    }
+}
+
+.product-images-container {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    justify-content: start;
+    flex-direction: column-reverse;
+}
+
+.thumbContainer {
+    width: 95vw;
+    max-width: 90%;
+    overflow-x: auto;
+}
+
+.thumbnails {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    width: max-content;
+}
+
+.thumbnail {
+    width: 100px;
+    height: auto;
+    cursor: pointer;
+    border: 1px solid transparent;
+    border-radius: 3px;
+    transition: border 0.3s, transform 0.2s;
+}
+
+.thumbnail.active {
+    border-color: #000;
+}
+
+.thumbnail img {
+    object-fit: cover;
+    width: 100%;
+    height: auto;
+}
+
+.main-image {
+    position: relative;
+    width: 75%;
+    cursor: grab;
+    transition: transform 0.3s ease;
+}
+
+.main-image:active {
+    cursor: grabbing;
+}
+
+.main-image:hover {
+    transform: scale(1.01);
+}
+
+.prev-button,
+.next-button {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: #ffffff41;
+    border: none;
+    border-radius: 50%;
+    color: #000;
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 1;
+    transition: background-color .3s ease;
+}
+
+.prev-button:hover,
+.next-button:hover {
+    background-color: #00000045;
+}
+
+.prev-button svg,
+.next-button svg {
+    width: 20px;
+    height: 20px;
+    fill: currentColor;
+}
+
+.prev-button {
+    left: 10px;
+}
+
+.next-button {
+    right: 10px;
+}
+
+.yarl__container {
+    background-color: #000000ab !important;
+    backdrop-filter: blur(15px) !important;
+}
+
+.ImageArrows{
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: absolute;
+    top: 50%;
+}

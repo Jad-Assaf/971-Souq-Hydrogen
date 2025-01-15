@@ -1,6 +1,7 @@
 import {Link} from '@remix-run/react';
 import {Image, Money, Pagination} from '@shopify/hydrogen';
 import {urlWithTrackingParams} from '~/lib/search';
+import "../styles/SearchResults.css"
 
 /**
  * @param {Omit<SearchResultsProps, 'error' | 'type'>}
@@ -94,28 +95,27 @@ function SearchResultsProducts({term, products}) {
 
   return (
     <div className="search-result">
-      <h2>Products</h2>
+      <div>
       <Pagination connection={products}>
         {({nodes, isLoading, NextLink, PreviousLink}) => {
           const ItemsMarkup = nodes.map((product) => {
-            const productUrl = urlWithTrackingParams({
-              baseUrl: `/products/${product.handle}`,
-              trackingParams: product.trackingParameters,
-              term,
-            });
-
-            const price = product?.selectedOrFirstAvailableVariant?.price;
-            const image = product?.selectedOrFirstAvailableVariant?.image;
+            const productUrl = `/products/${encodeURIComponent(product.handle)}`;
 
             return (
-              <div className="search-results-item" key={product.id}>
-                <Link prefetch="intent" to={productUrl}>
-                  {image && (
-                    <Image data={image} alt={product.title} width={50} />
+              <div className="search-results-item product-card" key={product.id}>
+                <Link prefetch="intent" to={productUrl} className='collection-product-link'>
+                  {product.variants.nodes[0].image && (
+                    <Image
+                      data={product.variants.nodes[0].image}
+                      alt={product.title}
+                      width={150}
+                    />
                   )}
-                  <div>
-                    <p>{product.title}</p>
-                    <small>{price && <Money data={price} />}</small>
+                  <div className='search-result-txt'>
+                    <p className='product-description'>{product.title}</p>
+                    <small className="price-container">
+                      <Money data={product.variants.nodes[0].price} />
+                    </small>
                   </div>
                 </Link>
               </div>
@@ -124,16 +124,15 @@ function SearchResultsProducts({term, products}) {
 
           return (
             <div>
-              <div>
+              <div className='view-more'>
                 <PreviousLink>
                   {isLoading ? 'Loading...' : <span>↑ Load previous</span>}
                 </PreviousLink>
               </div>
-              <div>
+              <div className="search-result-container">
                 {ItemsMarkup}
-                <br />
               </div>
-              <div>
+              <div className='view-more'>
                 <NextLink>
                   {isLoading ? 'Loading...' : <span>Load more ↓</span>}
                 </NextLink>
@@ -142,6 +141,7 @@ function SearchResultsProducts({term, products}) {
           );
         }}
       </Pagination>
+      </div>
       <br />
     </div>
   );

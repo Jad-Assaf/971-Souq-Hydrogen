@@ -1,0 +1,94 @@
+.account {
+    max-width: 1300px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin: 50px auto;
+    ;
+    border: 1px solid #000;
+    border-radius: 30px;
+}
+
+.account-order {
+    border: 1px solid #000;
+    border-radius: 30px;
+    padding: 20px;
+    width: 75%;
+    margin-bottom: 50px;
+    background-color: #f9f9f9;
+}
+
+.order-header {
+    display: flex;
+    justify-content: space-around;
+}
+
+.line-item {
+    display: flex;
+    justify-content: space-around;
+    text-align: center;
+}
+
+.line-item * {
+    flex: 1;
+}
+
+.line-item-product {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.line-item-title {
+    font-size: 12px;
+}
+
+.subtotal-container {
+    display: flex;
+    justify-content: space-around;
+    text-align: end;
+    width: 80%;
+    margin: 25px auto;
+}
+
+.subtotal-container * {
+    flex: 1;
+}
+
+.shipping-container * {
+    display: flex;
+    flex-direction: column;
+    margin: 5px 0;
+}
+
+.account .orders {
+    width: 70%;
+}
+
+.account .orders,
+.account .account-profile,
+.account .account-addresses {
+    width: 50%;
+}
+
+.account input {
+    border-color: #000 !important;
+    padding: 10px 25px;
+    border-radius: 30px;
+}
+
+.address-btn-container {
+    display: flex;
+    gap: 20px;
+}
+
+.address-btn {
+    padding: 5px 25px;
+    border: 1px solid #000;
+    border-radius: 30px;
+}
+
+.profile-update-btn {
+    margin: -6px 20px 20px;
+}

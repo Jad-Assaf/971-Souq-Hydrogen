@@ -1,5 +1,5 @@
 import {CartForm, Money} from '@shopify/hydrogen';
-import {useRef} from 'react';
+import {useEffect, useRef, useState} from 'react';
 
 /**
  * @param {CartSummaryProps}
@@ -8,37 +8,80 @@ export function CartSummary({cart, layout}) {
   const className =
     layout === 'page' ? 'cart-summary-page' : 'cart-summary-aside';
 
+  const subtotal = parseFloat(cart?.cost?.subtotalAmount?.amount ?? '0');
+
   return (
     <div aria-labelledby="cart-summary" className={className}>
-      <h4>Totals</h4>
+      <h4>
+        <strong>Subtotal</strong>
+      </h4>
       <dl className="cart-subtotal">
-        <dt>Subtotal</dt>
         <dd>
           {cart.cost?.subtotalAmount?.amount ? (
-            <Money data={cart.cost?.subtotalAmount} />
+            <Money
+              data={cart.cost.subtotalAmount}
+              style={{fontWeight: '500'}}
+            />
           ) : (
             '-'
           )}
         </dd>
       </dl>
-      <CartDiscounts discountCodes={cart.discountCodes} />
-      <CartGiftCard giftCardCodes={cart.appliedGiftCards} />
-      <CartCheckoutActions checkoutUrl={cart.checkoutUrl} />
+
+      <CartCheckoutActions
+        checkoutUrl={cart.checkoutUrl}
+        cartTotal={subtotal}
+      />
     </div>
   );
 }
+
 /**
  * @param {{checkoutUrl?: string}}
  */
-function CartCheckoutActions({checkoutUrl}) {
+export default function CartCheckoutActions({checkoutUrl, cartTotal = 0}) {
+  const [showAlert, setShowAlert] = useState(false);
+
+  // Hide the alert if the subtotal drops below $5000
+  useEffect(() => {
+    if (cartTotal < 5000 && showAlert) {
+      setShowAlert(false);
+    }
+  }, [cartTotal, showAlert]);
+
+  const handleButtonClick = () => {
+    if (cartTotal > 5000) {
+      // Prevent navigation, show alert
+      setShowAlert(true);
+    } else {
+      // Navigate to checkout
+      window.location.href = checkoutUrl;
+    }
+  };
+
   if (!checkoutUrl) return null;
 
   return (
-    <div>
-      <a href={checkoutUrl} target="_self">
-        <p>Continue to Checkout &rarr;</p>
-      </a>
-      <br />
+    <div className="cart-checkout-container">
+      <button
+        type="button"
+        className={`cart-checkout-button ${
+          cartTotal > 5000 ? 'disabled-look' : ''
+        }`}
+        onClick={handleButtonClick}
+      >
+        Continue to Checkout &nbsp; &rarr;
+      </button>
+
+      {showAlert && (
+        <div className="alert-box">
+          <span className="alert-icon">&times;</span>
+          <span className="alert-message">
+            We apologize for any inconvenience! Your order is above $5000. Please
+            contact sales to proceed. <a className='cart-err-msg-link' href="https://wa.me/9613020030">+961 3 020 030</a>
+          </span>
+        </div>
+      )}
     </div>
   );
 }

@@ -170,9 +170,32 @@ const MENU_FRAGMENT = `#graphql
     title
     type
     url
+    resource {
+      ... on Collection {
+        image {
+          src
+          altText
+        }
+      }
+    }
   }
   fragment ChildMenuItem on MenuItem {
     ...MenuItem
+    items {
+      id
+      title
+      url
+      items {
+        id
+        title
+        url
+        items {
+          id
+          title
+          url
+        }
+      }
+    }
   }
   fragment ParentMenuItem on MenuItem {
     ...MenuItem
@@ -187,6 +210,7 @@ const MENU_FRAGMENT = `#graphql
     }
   }
 `;
+
 
 export const HEADER_QUERY = `#graphql
   fragment Shop on Shop {
@@ -220,14 +244,104 @@ export const HEADER_QUERY = `#graphql
 `;
 
 export const FOOTER_QUERY = `#graphql
-  query Footer(
-    $country: CountryCode
-    $footerMenuHandle: String!
-    $language: LanguageCode
-  ) @inContext(language: $language, country: $country) {
-    menu(handle: $footerMenuHandle) {
-      ...Menu
+  query Footer($shopMenuHandle: String!, $policiesMenuHandle: String!) {
+    shopMenu: menu(handle: $shopMenuHandle) {
+      id
+      items {
+        id
+        title
+        url
+      }
+    }
+    policiesMenu: menu(handle: $policiesMenuHandle) {
+      id
+      items {
+        id
+        title
+        url
+      }
     }
   }
-  ${MENU_FRAGMENT}
 `;
+
+export const RELATED_PRODUCTS_QUERY = `#graphql
+  query RelatedProducts($productType: String!, $country: CountryCode, $language: LanguageCode) 
+  @inContext(country: $country, language: $language) {
+    products(first: 20, query: $productType) {
+      edges {
+        node {
+          id
+          title
+          handle
+          images(first: 1) {
+            edges {
+              node {
+                url
+                altText
+              }
+            }
+          }
+          priceRange {
+            minVariantPrice {
+              amount
+              currencyCode
+            }
+          }
+          compareAtPriceRange {
+            minVariantPrice {
+              amount
+              currencyCode
+            }
+          }
+          variants(first: 5) {
+            nodes {
+              id
+              availableForSale
+              price {
+                amount
+                currencyCode
+              }
+              compareAtPrice {
+                amount
+                currencyCode
+              }
+              image {
+                url
+                altText
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+
+export const RECENTLY_VIEWED_PRODUCTS_QUERY = `#graphql
+  query RecentlyViewedProducts($handles: [String!]!) {
+    products(first: 10, query: $handles) {
+      edges {
+        node {
+          id
+          title
+          handle
+          priceRange {
+            minVariantPrice {
+              amount
+              currencyCode
+            }
+          }
+          images(first: 1) {
+            edges {
+              node {
+                url
+                altText
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+

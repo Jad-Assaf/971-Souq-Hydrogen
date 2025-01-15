@@ -41,33 +41,31 @@ const SEARCH_PRODUCT_FRAGMENT = `#graphql
     title
     trackingParameters
     vendor
-    selectedOrFirstAvailableVariant(
-      selectedOptions: []
-      ignoreUnknownOptions: true
-      caseInsensitiveMatch: true
-    ) {
-      id
-      image {
-        url
-        altText
-        width
-        height
-      }
-      price {
-        amount
-        currencyCode
-      }
-      compareAtPrice {
-        amount
-        currencyCode
-      }
-      selectedOptions {
-        name
-        value
-      }
-      product {
-        handle
-        title
+    variants(first: 1) {
+      nodes {
+        id
+        image {
+          url
+          altText
+          width
+          height
+        }
+        price {
+          amount
+          currencyCode
+        }
+        compareAtPrice {
+          amount
+          currencyCode
+        }
+        selectedOptions {
+          name
+          value
+        }
+        product {
+          handle
+          title
+        }
       }
     }
   }

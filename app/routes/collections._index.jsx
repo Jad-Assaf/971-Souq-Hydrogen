@@ -86,7 +86,7 @@ function CollectionItem({collection, index}) {
       {collection?.image && (
         <Image
           alt={collection.image.altText || collection.title}
-          aspectRatio="1/1"
+          aspectratio="1/1"
           data={collection.image}
           loading={index < 3 ? 'eager' : undefined}
         />

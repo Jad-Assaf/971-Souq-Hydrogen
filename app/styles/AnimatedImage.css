@@ -1,0 +1,40 @@
+.image-wrapper {
+    width: 100%;
+    height: auto;
+    position: relative;
+    overflow: hidden;
+    display: block;
+}
+
+/* Placeholder styling (optional shimmer effect) */
+.image-placeholder {
+    width: 100%;
+    height: auto;
+    background-color: #e0e0e0;
+    animation: shimmer 1.5s linear infinite;
+}
+
+/* Smooth loading of the image */
+.lazy-image {
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
+}
+
+.lazy-image.lazy-load-image-loaded {
+    opacity: 1;
+    /* Image becomes visible after loading */
+}
+
+/* Optional shimmer animation */
+@keyframes shimmer {
+    0% {
+        background-position: -200px 0;
+    }
+
+    100% {
+        background-position: 200px 0;
+    }
+}

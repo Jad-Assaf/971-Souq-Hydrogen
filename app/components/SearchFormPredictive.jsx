@@ -20,10 +20,9 @@ export function SearchFormPredictive({
 
   /** Reset the input value and blur the input */
   function resetInput(event) {
-    event.preventDefault();
-    event.stopPropagation();
-    if (inputRef?.current?.value) {
-      inputRef.current.blur();
+    if (inputRef.current) {
+     inputRef.current.blur();
+     inputRef.current.value = '';
     }
   }
 
@@ -31,13 +30,14 @@ export function SearchFormPredictive({
   function goToSearch() {
     const term = inputRef?.current?.value;
     navigate(SEARCH_ENDPOINT + (term ? `?q=${term}` : ''));
+    resetInput(); // This will now clear and blur the input
     aside.close();
   }
 
   /** Fetch search results based on the input value */
   function fetchResults(event) {
     fetcher.submit(
-      {q: event.target.value || '', limit: 5, predictive: true},
+      {q: event.target.value || '', limit: 10, predictive: true},
       {method: 'GET', action: SEARCH_ENDPOINT},
     );
   }

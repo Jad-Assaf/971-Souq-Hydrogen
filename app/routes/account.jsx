@@ -1,6 +1,7 @@
 import {json} from '@shopify/remix-oxygen';
 import {Form, NavLink, Outlet, useLoaderData} from '@remix-run/react';
 import {CUSTOMER_DETAILS_QUERY} from '~/graphql/customer-account/CustomerDetailsQuery';
+import '../styles/Account.css'
 
 export function shouldRevalidate() {
   return true;
@@ -54,7 +55,7 @@ function AccountMenu() {
   function isActiveStyle({isActive, isPending}) {
     return {
       fontWeight: isActive ? 'bold' : undefined,
-      color: isPending ? 'grey' : 'black',
+      color: isPending ? 'grey' : '#000',
     };
   }
 

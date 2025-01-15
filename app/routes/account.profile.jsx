@@ -125,7 +125,7 @@ export default function AccountProfile() {
         ) : (
           <br />
         )}
-        <button type="submit" disabled={state !== 'idle'}>
+        <button type="submit" disabled={state !== 'idle'} className='address-btn profile-update-btn'>
           {state !== 'idle' ? 'Updating' : 'Update'}
         </button>
       </Form>

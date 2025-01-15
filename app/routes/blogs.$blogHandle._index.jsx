@@ -106,7 +106,7 @@ function ArticleItem({article, loading}) {
           <div className="blog-article-image">
             <Image
               alt={article.image.altText || article.title}
-              aspectRatio="3/2"
+              aspectratio="3/2"
               data={article.image}
               loading={loading}
               sizes="(min-width: 768px) 50vw, 100vw"

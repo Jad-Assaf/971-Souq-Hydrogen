@@ -3,6 +3,7 @@ import {useLoaderData, Link} from '@remix-run/react';
 import {getPaginationVariables, Image, Money} from '@shopify/hydrogen';
 import {useVariantUrl} from '~/lib/variants';
 import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
+import { AnimatedImage } from '~/components/AnimatedImage';
 
 /**
  * @type {MetaFunction<typeof loader>}
@@ -83,8 +84,10 @@ export default function Collection() {
  *   loading?: 'eager' | 'lazy';
  * }}
  */
-function ProductItem({product, loading}) {
-  const variantUrl = useVariantUrl(product.handle);
+function ProductItem({ product, loading }) {
+  const variant = product.variants.nodes[0];
+  const variantUrl = useVariantUrl(product.handle, variant.selectedOptions);
+
   return (
     <Link
       className="product-item"
@@ -93,12 +96,12 @@ function ProductItem({product, loading}) {
       to={variantUrl}
     >
       {product.featuredImage && (
-        <Image
+        <AnimatedImage
+          src={product.featuredImage.url} // Ensure src is passed correctly
           alt={product.featuredImage.altText || product.title}
-          aspectRatio="1/1"
-          data={product.featuredImage}
           loading={loading}
-          sizes="(min-width: 45em) 400px, 100vw"
+          width="180px"
+          height="180px"
         />
       )}
       <h4>{product.title}</h4>
@@ -108,6 +111,7 @@ function ProductItem({product, loading}) {
     </Link>
   );
 }
+
 
 const PRODUCT_ITEM_FRAGMENT = `#graphql
   fragment MoneyProductItem on MoneyV2 {
@@ -131,6 +135,14 @@ const PRODUCT_ITEM_FRAGMENT = `#graphql
       }
       maxVariantPrice {
         ...MoneyProductItem
+      }
+    }
+    variants(first: 1) {
+      nodes {
+        selectedOptions {
+          name
+          value
+        }
       }
     }
   }

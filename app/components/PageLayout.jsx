@@ -1,7 +1,6 @@
 import {Await, Link} from '@remix-run/react';
 import {Suspense, useId} from 'react';
 import {Aside} from '~/components/Aside';
-import {Footer} from '~/components/Footer';
 import {Header, HeaderMenu} from '~/components/Header';
 import {CartMain} from '~/components/CartMain';
 import {
@@ -9,6 +8,33 @@ import {
   SearchFormPredictive,
 } from '~/components/SearchFormPredictive';
 import {SearchResultsPredictive} from '~/components/SearchResultsPredictive';
+import { Footer } from './Footer';
+
+const shopMenuData = [
+  { title: "Apple", link: "/collections/apple" },
+  { title: "Gaming", link: "/collections/gaming" },
+  { title: "Laptops", link: "/collections/laptops" },
+  { title: "Desktops", link: "/collections/desktops" },
+  { title: "PC Parts", link: "/collections/pc-parts" },
+  { title: "Networking", link: "/collections/networking" },
+  { title: "Monitors", link: "/collections/monitors" },
+  { title: "Mobiles", link: "/collections/mobiles" },
+  { title: "Tablets", link: "/collections/tablets" },
+  { title: "Audio", link: "/collections/audio" },
+  { title: "Accessories", link: "/collections/accessories" },
+  { title: "Fitness", link: "/collections/fitness" },
+  { title: "Photography", link: "/collections/photography" },
+  { title: "Home Appliances", link: "/collections/home-appliances" },
+];
+
+const policiesMenuData = [
+  { title: "Exchange Policy", link: "/pages/refund-and-warranty-policy" },
+  { title: "Shipping Policy", link: "/pages/shipping-policy" },
+  { title: "Privacy Policy", link: "/pages/privacy-policy" },
+  { title: "Terms of Service", link: "/pages/terms-of-service" },
+  { title: "Contact Us", link: "/contact" },
+];
+
 
 /**
  * @param {PageLayoutProps}
@@ -16,10 +42,10 @@ import {SearchResultsPredictive} from '~/components/SearchResultsPredictive';
 export function PageLayout({
   cart,
   children = null,
-  footer,
   header,
   isLoggedIn,
   publicStoreDomain,
+  footer, // Add footer as a prop
 }) {
   return (
     <Aside.Provider>
@@ -35,11 +61,7 @@ export function PageLayout({
         />
       )}
       <main>{children}</main>
-      <Footer
-        footer={footer}
-        header={header}
-        publicStoreDomain={publicStoreDomain}
-      />
+      <Footer shopMenu={shopMenuData} policiesMenu={policiesMenuData} />
     </Aside.Provider>
   );
 }
@@ -68,7 +90,7 @@ function SearchAside() {
       <div className="predictive-search">
         <br />
         <SearchFormPredictive>
-          {({fetchResults, goToSearch, inputRef}) => (
+          {({ fetchResults, goToSearch, inputRef }) => (
             <>
               <input
                 name="q"
@@ -80,7 +102,15 @@ function SearchAside() {
                 list={queriesDatalistId}
               />
               &nbsp;
-              <button onClick={goToSearch}>Search</button>
+              <button
+                onClick={() => {
+                  goToSearch(); // Corrected: Added parentheses to invoke goToSearch
+                  closeSearch();
+                  setSearchResultsVisible(false);
+                }}
+              >
+                Search
+              </button>
             </>
           )}
         </SearchFormPredictive>
@@ -168,7 +198,6 @@ function MobileMenuAside({header, publicStoreDomain}) {
 /**
  * @typedef {Object} PageLayoutProps
  * @property {Promise<CartApiQueryFragment|null>} cart
- * @property {Promise<FooterQuery|null>} footer
  * @property {HeaderQuery} header
  * @property {Promise<boolean>} isLoggedIn
  * @property {string} publicStoreDomain
@@ -176,5 +205,4 @@ function MobileMenuAside({header, publicStoreDomain}) {
  */
 
 /** @typedef {import('storefrontapi.generated').CartApiQueryFragment} CartApiQueryFragment */
-/** @typedef {import('storefrontapi.generated').FooterQuery} FooterQuery */
 /** @typedef {import('storefrontapi.generated').HeaderQuery} HeaderQuery */

@@ -87,21 +87,19 @@ const PREDICTIVE_SEARCH_PRODUCT_FRAGMENT = `#graphql
     title
     handle
     trackingParameters
-    selectedOrFirstAvailableVariant(
-      selectedOptions: []
-      ignoreUnknownOptions: true
-      caseInsensitiveMatch: true
-    ) {
-      id
-      image {
-        url
-        altText
-        width
-        height
-      }
-      price {
-        amount
-        currencyCode
+    variants(first: 1) {
+      nodes {
+        id
+        image {
+          url
+          altText
+          width
+          height
+        }
+        price {
+          amount
+          currencyCode
+        }
       }
     }
   }
@@ -159,7 +157,7 @@ const PREDICTIVE_SEARCH_QUERY = `#graphql
 /**
  * Predictive search fetcher
  */
-async function predictiveSearch({
+async function predictiveSeach({
   request,
   context,
 }: Pick<ActionFunctionArgs, 'request' | 'context'>) {
@@ -360,8 +358,7 @@ SearchResultsPredictive.Products = function ({
             trackingParams: product.trackingParameters,
             term: term.current,
           });
-+         const price = product?.selectedOrFirstAvailableVariant?.price;
-+         const image = product?.selectedOrFirstAvailableVariant?.image;
++         const image = product?.variants?.nodes?.[0].image;
           return (
             <li className="predictive-search-result-item" key={product.id}>
               <Link to={productUrl} onClick={closeSearch}>
@@ -376,11 +373,11 @@ SearchResultsPredictive.Products = function ({
                 <div>
                   <p>{product.title}</p>
                   <small>
-+                 {price && (
-+                   <Money
-+                     data={price}
-+                   />
-+                 )}
+                  {product?.variants?.nodes?.[0].price && (
+                    <Money
+                      data={product.variants.nodes[0].price}
+                    />
+                  )}
                   </small>
                 </div>
               </Link>

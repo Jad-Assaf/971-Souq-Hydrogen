@@ -1,5 +1,4 @@
-import {createContext, useContext, useEffect, useState} from 'react';
-
+import React, {createContext, useContext, useEffect, useState} from 'react';
 /**
  * A side bar component with Overlay
  * @example
@@ -46,7 +45,7 @@ export function Aside({children, heading, type}) {
       <aside>
         <header>
           <h3>{heading}</h3>
-          <button className="close reset" onClick={close} aria-label="Close">
+          <button className="close reset" onClick={close}>
             &times;
           </button>
         </header>
