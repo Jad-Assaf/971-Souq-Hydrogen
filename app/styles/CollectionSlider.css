@@ -74,10 +74,7 @@
 @media screen and (max-width: 1024px) {
     .category-slider {
         flex-wrap: wrap;
-        border: 1px solid #ababab;
-        border-radius: 5px;
-        width: 95vw;
-        box-shadow: inset 0px 0px 20px 0px #ededed;
+        width: 100%;
         padding-bottom: 20px;
         margin: auto;
         justify-content: center;
