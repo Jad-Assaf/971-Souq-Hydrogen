@@ -327,7 +327,7 @@ export function ProductForm({
     }
     // If no initial variant, fallback to the first option value
     return product.options.reduce((acc, option) => {
-      acc[option.name] = option.values[0]?.value || '';
+      acc[option.name] = option.optionValues[0]?.value || '';
       return acc;
     }, {});
   });

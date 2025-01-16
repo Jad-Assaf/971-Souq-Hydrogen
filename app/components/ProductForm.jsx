@@ -33,7 +33,7 @@ export function ProductForm({
       );
     }
     return product.options.reduce((acc, option) => {
-      acc[option.name] = option.values[0]?.value || '';
+      acc[option.name] = option.optionValues[0]?.value || '';
       return acc;
     }, {});
   });
@@ -49,7 +49,7 @@ export function ProductForm({
     } else {
       setSelectedOptions(
         product.options.reduce((acc, option) => {
-          acc[option.name] = option.values[0]?.value || '';
+          acc[option.name] = option.optionValues[0]?.value || '';
           return acc;
         }, {}),
       );
@@ -144,7 +144,9 @@ export function ProductForm({
     <>
       <VariantSelector
         handle={product.handle}
-        options={product.options.filter((option) => option.values.length > 1)}
+        options={product.options.filter(
+          (option) => option.optionValues.length > 1,
+        )}
         variants={variants}
       >
         {({option}) => (
@@ -199,7 +201,7 @@ function ProductOptions({option, selectedOptions, onOptionChange}) {
         <span className="OptionValue">{selectedOptions[option.name]}</span>
       </h5>
       <div className="product-options-grid">
-        {option.values.map(({value, isAvailable, variant}) => {
+        {option.optionValues.map(({value, isAvailable, variant}) => {
           const isColorOption = option.name.toLowerCase() === 'color';
           const variantImage = isColorOption && variant?.image?.url;
 
