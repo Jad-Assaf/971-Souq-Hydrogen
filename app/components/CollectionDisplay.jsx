@@ -234,11 +234,11 @@ export function ProductItem({product, index}) {
         <h4 className="product-title">{product.title}</h4>
         <div className="product-price">
           {selectedVariant?.price && <Money data={selectedVariant.price} />}
-          {hasDiscount && (
+          {/* {hasDiscount && (
             <small className="discountedPrice">
               <Money data={selectedVariant.compareAtPrice} />
             </small>
-          )}
+          )} */}
         </div>
       </Link>
 

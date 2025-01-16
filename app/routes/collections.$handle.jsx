@@ -1074,11 +1074,11 @@ const ProductItem = React.memo(({product, index, numberInRow}) => {
                 >
                   <Money data={selectedVariant.price} />
                 </small>
-                {hasDiscount && selectedVariant.compareAtPrice && (
+                {/* {hasDiscount && selectedVariant.compareAtPrice && (
                   <small className="discountedPrice">
                     <Money data={selectedVariant.compareAtPrice} />
                   </small>
-                )}
+                )} */}
               </div>
             </Link>
             <ProductForm

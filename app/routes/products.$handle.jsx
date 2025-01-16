@@ -640,11 +640,11 @@ export default function Product() {
             >
               <Money data={selectedVariant?.price} />
             </small>
-            {hasDiscount && selectedVariant.compareAtPrice && (
+            {/* {hasDiscount && selectedVariant.compareAtPrice && (
               <small className="discountedPrice">
                 <Money data={selectedVariant?.compareAtPrice} />
               </small>
-            )}
+            )} */}
           </div>
           <div className="quantity-selector">
             <p>Quantity</p>
