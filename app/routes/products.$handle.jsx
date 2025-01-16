@@ -442,9 +442,9 @@ export function ProductForm({
 
   // Possibly build a WhatsApp link
   const isProductPage = location.pathname.includes('/products/');
-const whatsappShareUrl = `https://api.whatsapp.com/send?phone=9613020030&text=${encodeURIComponent(
-  `Hi, I'd like to buy ${product.title} https://971souq.ae${location.pathname}`,
-)}`;
+  const whatsappShareUrl = `https://api.whatsapp.com/send?phone=9613020030&text=${encodeURIComponent(
+    `Hi, I'd like to buy ${product.title} https://971souq.ae${location.pathname}`,
+  )}`;
 
   // WhatsApp SVG icon (if you still want the share button)
   const WhatsAppIcon = () => (
@@ -580,8 +580,8 @@ const whatsappShareUrl = `https://api.whatsapp.com/send?phone=9613020030&text=${
 //             disabled={isUnavailable || fetcher.state !== 'idle'}
 //             className={`buy-now-button ${isUnavailable ? 'disabled' : ''}`}
 //             onClick={handleAnimation}
-//             animate={isAnimating ? {scale: 1.05} : {scale: 1}}
-//             transition={{duration: 0.3}}
+//             animate={isAnimating ? { scale: 1.05 } : { scale: 1 }}
+//             transition={{ duration: 0.3 }}
 //           >
 //             Buy Now
 //           </motion.button>
@@ -664,13 +664,19 @@ export default function Product() {
             })}
           </div>
 
-          <ProductForm
-            product={product}
-            selectedVariant={selectedVariant}
-            onVariantChange={setSelectedVariant}
-            variants={variants?.product?.variants?.nodes || []}
-            quantity={Number(quantity)}
-          />
+          <Suspense fallback={<div>Loading options...</div>}>
+            <Await resolve={variants}>
+              {({product: variantProduct}) => (
+                <ProductForm
+                  product={product}
+                  selectedVariant={selectedVariant}
+                  onVariantChange={setSelectedVariant}
+                  variants={variantProduct.variants.nodes}
+                  quantity={Number(quantity)}
+                />
+              )}
+            </Await>
+          </Suspense>
 
           <hr className="productPage-hr" />
           <div className="product-details">
@@ -814,15 +820,15 @@ export default function Product() {
             <h3>Operational Warranty Terms and Conditions</h3>
             <h3>Warranty Coverage</h3>
             <p>
-              This warranty applies to All Products, purchased from 971Souq.
-              The warranty covers defects in materials and workmanship under
-              normal use for the period specified at the time of purchase.
-              Warranty periods vary based on the product category.
+              This warranty applies to All Products, purchased from 971Souq. The
+              warranty covers defects in materials and workmanship under normal
+              use for the period specified at the time of purchase. Warranty
+              periods vary based on the product category.
             </p>
             <h3>What is Covered</h3>
             <p>
-              During the warranty period, 971Souq will repair or replace, at
-              no charge, any parts that are found to be defective due to faulty
+              During the warranty period, 971Souq will repair or replace, at no
+              charge, any parts that are found to be defective due to faulty
               materials or poor workmanship. This warranty is valid only for the
               original purchaser and is non-transferable.
             </p>
@@ -852,8 +858,8 @@ export default function Product() {
                 description of the issue.
               </li>
               <li>
-                971Souq will assess the product and, if deemed defective,
-                repair or replace the item at no cost.
+                971Souq will assess the product and, if deemed defective, repair
+                or replace the item at no cost.
               </li>
             </ol>
             <h3>Limitations and Exclusions</h3>

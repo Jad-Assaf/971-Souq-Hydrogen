@@ -164,7 +164,7 @@ export function ProductForm({
       <br></br>
       <div className="product-form">
         <AddToCartButton
-          // disabled={!updatedVariant || !updatedVariant.availableForSale}
+          disabled={!updatedVariant || !updatedVariant.availableForSale}
           onClick={() => open('cart')}
           lines={
             updatedVariant
