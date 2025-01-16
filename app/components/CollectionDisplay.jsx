@@ -282,8 +282,11 @@ const styles = {
   slideshow: {
     position: 'relative',
     width: '100%',
-    height: 'auto',
+    height: '180px',
     overflow: 'hidden',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   image: {
     width: '100%',
