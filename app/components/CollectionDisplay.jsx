@@ -4,7 +4,6 @@ import {Money, Image} from '@shopify/hydrogen';
 import {AddToCartButton} from './AddToCartButton';
 import {useAside} from './Aside';
 import CollectionRows from './CollectionRows'; // Standard import for CollectionRows
-import { CurrencyChanger } from './CurrencyChanger';
 
 // Truncate text to fit within the given max word count
 export function truncateText(text, maxWords) {
@@ -234,7 +233,7 @@ export function ProductItem({product, index}) {
         )}
         <h4 className="product-title">{product.title}</h4>
         <div className="product-price">
-          {selectedVariant?.price && <CurrencyChanger data={selectedVariant.price} />}
+          {selectedVariant?.price && <Money data={selectedVariant.price} />}
           {/* {hasDiscount && (
             <small className="discountedPrice">
               <Money data={selectedVariant.compareAtPrice} />
