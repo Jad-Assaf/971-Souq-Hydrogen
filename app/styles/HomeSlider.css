@@ -71,6 +71,10 @@
     height: 60px;
 }
 
+.category-container img {
+    border-radius: 50%;
+}
+
 .category-container a {
     display: flex;
     flex-direction: column;

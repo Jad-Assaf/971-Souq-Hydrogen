@@ -24,7 +24,7 @@ import {FiltersDrawer} from '../modules/drawer-filter';
 import {getAppliedFilterLink} from '../lib/filter';
 import {AddToCartButton} from '../components/AddToCartButton';
 import {useAside} from '~/components/Aside';
-import '../styles/CollectionSlider.css';
+import '../styles/HomeSlider.css';
 
 function truncateText(text, maxWords) {
   if (!text || typeof text !== 'string') {
@@ -43,33 +43,33 @@ export const meta = ({data}) => {
   const collection = data?.collection;
 
   return getSeoMeta({
-    title: `${collection?.title || 'Collection'} | Macarabia`,
+    title: `${collection?.title || 'Collection'} | 971Souq`,
     description: truncateText(
-      collection?.description || 'Explore our latest collection at Macarabia.',
+      collection?.description || 'Explore our latest collection at 971Souq.',
       20,
     ),
-    url: `https://macarabia.me/collections/${collection?.handle || ''}`,
+    url: `https://971souq.ae/collections/${collection?.handle || ''}`,
     image:
       collection?.image?.url ||
-      'https://macarabia.me/default-collection-image.jpg',
+      'https://971souq.ae/default-collection-image.jpg',
     jsonLd: [
       // CollectionPage Schema
       {
         '@context': 'http://schema.org/',
         '@type': 'CollectionPage',
         name: collection?.title || 'Collection',
-        url: `https://macarabia.me/collections/${collection?.handle || ''}`,
+        url: `https://971souq.ae/collections/${collection?.handle || ''}`,
         description: truncateText(collection?.description || '', 20),
         image: {
           '@type': 'ImageObject',
           url:
             collection?.image?.url ||
-            'https://macarabia.me/default-collection-image.jpg',
+            'https://971souq.ae/default-collection-image.jpg',
         },
         hasPart: collection?.products?.nodes?.slice(0, 20).map((product) => ({
           '@type': 'Product',
           name: truncateText(product?.title || 'Product', 10),
-          url: `https://macarabia.me/products/${encodeURIComponent(
+          url: `https://971souq.ae/products/${encodeURIComponent(
             product?.handle,
           )}`,
           sku: product?.variants?.[0]?.sku || product?.variants?.[0]?.id || '',
@@ -88,10 +88,10 @@ export const meta = ({data}) => {
           productID: product?.id,
           brand: {
             '@type': 'Brand',
-            name: product?.vendor || 'Macarabia',
+            name: product?.vendor || '971Souq',
           },
           description: truncateText(product?.description || '', 20),
-          image: `https://macarabia.me/products/${product?.featuredImage?.url}`,
+          image: `https://971souq.ae/products/${product?.featuredImage?.url}`,
           offers: {
             '@type': 'Offer',
             priceCurrency: product?.variants?.[0]?.price?.currencyCode || 'USD',
@@ -100,7 +100,7 @@ export const meta = ({data}) => {
             availability: product?.availableForSale
               ? 'http://schema.org/InStock'
               : 'http://schema.org/OutOfStock',
-            url: `https://macarabia.me/products/${encodeURIComponent(
+            url: `https://971souq.ae/products/${encodeURIComponent(
               product?.handle,
             )}`,
             priceValidUntil: '2025-12-31',
@@ -152,13 +152,13 @@ export const meta = ({data}) => {
             '@type': 'ListItem',
             position: 1,
             name: 'Home',
-            item: 'https://macarabia.me',
+            item: 'https://971souq.ae',
           },
           {
             '@type': 'ListItem',
             position: 2,
             name: collection?.title || 'Collection',
-            item: `https://macarabia.me/collections/${
+            item: `https://971souq.ae/collections/${
               collection?.handle || ''
             }`,
           },
@@ -170,13 +170,13 @@ export const meta = ({data}) => {
         '@type': 'ItemList',
         name: collection?.title || 'Collection',
         description: truncateText(collection?.description || '', 20),
-        url: `https://macarabia.me/collections/${collection?.handle || ''}`,
+        url: `https://971souq.ae/collections/${collection?.handle || ''}`,
         itemListElement: collection?.products?.nodes
           ?.slice(0, 20)
           .map((product, index) => ({
             '@type': 'ListItem',
             position: index + 1,
-            url: `https://macarabia.me/products/${encodeURIComponent(
+            url: `https://971souq.ae/products/${encodeURIComponent(
               product?.handle,
             )}`,
             name: truncateText(product?.title || 'Product', 10),
@@ -184,7 +184,7 @@ export const meta = ({data}) => {
               '@type': 'ImageObject',
               url:
                 product?.featuredImage?.url ||
-                'https://macarabia.me/default-product-image.jpg',
+                'https://971souq.ae/default-product-image.jpg',
             },
           })),
       },
@@ -365,18 +365,14 @@ export default function Collection() {
   const {collection, appliedFilters, sliderCollections} = useLoaderData();
   const [userSelectedNumberInRow, setUserSelectedNumberInRow] = useState(null); // Tracks user selection
 
-  // *** CHANGED HERE: always return 1 if the user hasn't manually chosen a layout ***
   const calculateNumberInRow = (width, userSelection) => {
-    if (userSelection !== null) return userSelection; // user still can override
-    return 1; // always default to 1
+    if (userSelection !== null) return userSelection; // User override
+    return 1; // Default to 1
   };
 
-  const [screenWidth, setScreenWidth] = useState(
-    typeof window !== 'undefined' ? window.innerWidth : 0,
-  );
-  const [numberInRow, setNumberInRow] = useState(
-    typeof window !== 'undefined' ? calculateNumberInRow(window.innerWidth) : 1,
-  );
+  const [screenWidth, setScreenWidth] = useState(0);
+  const [numberInRow, setNumberInRow] = useState(1);
+
   const isDesktop = useMediaQuery({minWidth: 1024});
   const [searchParams] = useSearchParams();
   const location = useLocation();
@@ -389,8 +385,10 @@ export default function Collection() {
       setNumberInRow(calculateNumberInRow(width, userSelectedNumberInRow));
     };
 
-    updateLayout(); // Set layout on initial render
+    // Initial layout setup
+    updateLayout();
 
+    // Debounce function for resize
     const debounce = (fn, delay) => {
       let timeoutId;
       return (...args) => {
@@ -406,7 +404,7 @@ export default function Collection() {
     return () => {
       window.removeEventListener('resize', debouncedUpdateLayout);
     };
-  }, [userSelectedNumberInRow]); // Add userSelectedNumberInRow as a dependency
+  }, [userSelectedNumberInRow]); // Depend on user selection for updates
 
   const handleLayoutChange = (number) => {
     setUserSelectedNumberInRow(number); // Save user preference
@@ -415,8 +413,6 @@ export default function Collection() {
 
   const handleFilterRemove = (filter) => {
     const updatedParams = new URLSearchParams(searchParams.toString());
-
-    // Clean up 'direction' and 'cursor' parameters
     updatedParams.delete('direction');
     updatedParams.delete('cursor');
 
@@ -428,7 +424,7 @@ export default function Collection() {
     const url = new URL(window.location.href);
     const query = url.searchParams;
 
-    // Remove 'direction' and 'cursor' if they exist
+    // Remove unwanted query parameters
     query.delete('direction');
     query.delete('cursor');
 
@@ -436,10 +432,8 @@ export default function Collection() {
     window.history.replaceState({}, '', cleanUrl);
   }, []);
 
-
   const sortedProducts = React.useMemo(() => {
-    if (!collection || !collection.products || !collection.products.nodes)
-      return [];
+    if (!collection?.products?.nodes) return [];
     const products = [...collection.products.nodes];
     return products.sort((a, b) => {
       const aInStock = a.variants.nodes.some(
@@ -456,19 +450,15 @@ export default function Collection() {
   }, [collection?.products?.nodes]);
 
   useEffect(() => {
-    const url = new URL(window.location.href); // Get the current URL
-    const query = url.search; // Get the query string
+    const url = new URL(window.location.href);
+    const query = url.search;
 
-    // Check if 'direction' exists in the query string
     if (query.includes('?direction')) {
-      // Retain everything before '?direction'
       const cleanUrl = url.origin + url.pathname;
-
-      // Update the URL without reloading the page
       window.history.replaceState({}, '', cleanUrl);
     }
   }, []);
-
+  
   return (
     <div className="collection">
       <h1>{collection.title}</h1>
@@ -487,6 +477,7 @@ export default function Collection() {
                     {sliderCollection.image && (
                       <Image
                         sizes="(min-width: 45em) 20vw, 40vw"
+                        src={`${sliderCollection.image.url}?width=600&quality=7`}
                         srcSet={`${sliderCollection.image.url}?width=300&quality=7 300w,
                                      ${sliderCollection.image.url}?width=600&quality=7 600w,
                                      ${sliderCollection.image.url}?width=1200&quality=7 1200w`}
@@ -1059,6 +1050,7 @@ const ProductItem = React.memo(({product, index, numberInRow}) => {
                   <p>Sold Out</p>
                 </div>
                 <Image
+                  src={`${product.featuredImage.url}?width=300&quality=15`}
                   srcSet={`${product.featuredImage.url}?width=300&quality=15 300w,
                            ${product.featuredImage.url}?width=600&quality=15 600w,
                            ${product.featuredImage.url}?width=1200&quality=15 1200w`}

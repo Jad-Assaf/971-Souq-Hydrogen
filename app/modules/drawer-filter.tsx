@@ -397,12 +397,14 @@ export default function SortMenu({
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const location = useLocation();
-  const [screenWidth, setScreenWidth] = useState(
-    typeof window !== "undefined" ? window.innerWidth : 1500 // Default to a large screen width on the server
-  );
+  const [screenWidth, setScreenWidth] = useState(1500); // Server default
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
+      setScreenWidth(window.innerWidth);
+      setIsMounted(true);
+
       const handleResize = () => setScreenWidth(window.innerWidth);
       window.addEventListener("resize", handleResize);
 
@@ -425,7 +427,9 @@ export default function SortMenu({
   ];
 
   const items = showSearchSort ? searchSortItems : productSortItems;
-  const activeItem = items.find((item) => item.key === params.get("sort")) || items[0];
+  const activeItem = items.find(
+    (item) => item.key === params.get("sort")
+  ) || items[0];
 
   const handleSort = (sortKey: SortParam) => {
     const newUrl = getSortLink(sortKey, params, location);
@@ -436,7 +440,9 @@ export default function SortMenu({
     <Menu as="div" className="relative z-10">
       <MenuButton className="flex items-center gap-1.5 h-10 border border-gray-300 px-4 py-2.5 rounded-full">
         <span className="font-medium">
-          {typeof window !== "undefined" && screenWidth > 550 ? `Sort by: ${activeItem.label}` : "Sort"}
+          {isMounted && screenWidth > 550
+            ? `Sort by: ${activeItem.label}`
+            : "Sort"}
         </span>
         <CaretDown />
       </MenuButton>
@@ -451,7 +457,9 @@ export default function SortMenu({
                 onClick={() => handleSort(item.key)}
                 className={clsx(
                   "block w-full text-left text-base hover:underline underline-offset-4 fltr-btn",
-                  activeItem.key === item.key ? "font-bold" : "font-normal"
+                  activeItem.key === item.key
+                    ? "font-bold"
+                    : "font-normal"
                 )}
               >
                 {item.label}

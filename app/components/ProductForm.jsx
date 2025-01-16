@@ -138,7 +138,7 @@ export function ProductForm({
   );
 
   // Construct WhatsApp share URL
-  const whatsappShareUrl = `https://api.whatsapp.com/send?phone=9613020030&text=Hi, I would like to buy ${product.title} https://macarabia.me${location.pathname}`;
+  const whatsappShareUrl = `https://api.whatsapp.com/send?phone=9613020030&text=Hi, I would like to buy ${product.title} https://971souq.ae${location.pathname}`;
 
   return (
     <>

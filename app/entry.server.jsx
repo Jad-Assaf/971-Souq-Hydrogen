@@ -17,11 +17,10 @@ export default async function handleRequest(
   remixContext,
   context,
 ) {
-  // Redirect logic for www.macarabia.me to macarabia.me
+
   const url = new URL(request.url);
-  if (url.hostname === 'www.macarabia.me') {
-    // Redirect to macarabia.me with the same path and query params
-    const redirectUrl = `https://macarabia.me${url.pathname}${url.search}`;
+  if (url.hostname === 'www.971souq.ae') {
+    const redirectUrl = `https://971souq.ae${url.pathname}${url.search}`;
     return new Response(null, {
       status: 301,
       headers: {
@@ -40,6 +39,8 @@ export default async function handleRequest(
       "'self'", // Allow scripts from the same origin
       'https://www.clarity.ms', // Allow scripts from clarity.ms
       'https://*.clarity.ms', // Allow scripts from clarity.ms
+      'https://971souq.ae',
+      'https://971souq.myshopify.com',
       'https://cdn.shopify.com', // Allow scripts from Shopify CDN
       'https://connect.facebook.net', // Required for Meta Pixel
     ],
@@ -47,6 +48,8 @@ export default async function handleRequest(
       "'self'", // Allow connections to the same origin
       'https://x.clarity.ms', // Allow connections to Clarity
       'https://*.clarity.ms', // Allow connections to any subdomain of clarity.ms
+      'https://971souq.ae',
+      'https://971souq.myshopify.com',
       'https://monorail-edge.shopifysvc.com', // Allow Shopify service connections
       'https://connect.facebook.net', // Required for Meta Pixel
     ],
@@ -57,7 +60,8 @@ export default async function handleRequest(
       'https://cdn.shopify.com',
       'https://cdn.shopifycdn.com',
       'https://*.shopifycdn.com',
-      'https://macarabia.me',
+      'https://971souq.ae',
+      'https://971souq.myshopify.com',
       'https://www.facebook.com', // if you need the FB Pixel 1x1
       // etc.
     ],

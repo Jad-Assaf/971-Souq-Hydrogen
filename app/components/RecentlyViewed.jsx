@@ -70,13 +70,13 @@ export default function RecentlyViewedProducts({currentProductId}) {
     `;
 
     const response = await fetch(
-      `https://d40293-4.myshopify.com/api/2023-07/graphql.json`,
+      `https://971souq.myshopify.com/api/2023-07/graphql.json`,
       {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'X-Shopify-Storefront-Access-Token':
-            'c34c6525896450dac5813b07d50e97f1',
+            '4a6888a1225616e0ed01bf21e3c10d0a',
         },
         body: JSON.stringify({
           query,

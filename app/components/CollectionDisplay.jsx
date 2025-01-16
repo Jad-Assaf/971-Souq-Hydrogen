@@ -187,9 +187,9 @@ export function ProductItem({product, index}) {
               alt={images[currentImageIndex]?.altText || 'Product Image'}
               aspectratio="1/1"
               sizes="(min-width: 45em) 20vw, 40vw"
-              srcSet={`${images[currentImageIndex]?.url}?width=300&quality=1 300w,
-                                     ${images[currentImageIndex]?.url}?width=600&quality=1 600w,
-                                     ${images[currentImageIndex]?.url}?width=1200&quality=1 1200w`}
+              srcSet={`${images[currentImageIndex]?.url}?width=300&quality=10 300w,
+                                     ${images[currentImageIndex]?.url}?width=600&quality=10 600w,
+                                     ${images[currentImageIndex]?.url}?width=1200&quality=10 1200w`}
               width="180px"
               height="180px"
               loading="lazy"

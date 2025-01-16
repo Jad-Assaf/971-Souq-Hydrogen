@@ -139,9 +139,6 @@ export function ProductImages({images, selectedVariantImage}) {
               loading="eager"
               decoding="async"
               onLoad={() => setIsImageLoaded(true)}
-              loaderOptions={{
-                scale: 2, // or any scale factor
-              }}
             />
           </div>
         )}
