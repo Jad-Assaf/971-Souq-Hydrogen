@@ -1456,6 +1456,7 @@ li.cart-line .product-price {
     margin: auto !important;
     padding: 20px 0 !important;
     max-height: 75vh !important;
+    overscroll-behavior: contain;
   }
 
   .predictive-search-result-item a {
