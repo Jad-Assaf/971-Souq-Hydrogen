@@ -214,6 +214,9 @@ export default function App() {
 /**
  * Error boundary component for catching route errors.
  */
+/**
+ * Error boundary component for catching route errors.
+ */
 export function ErrorBoundary() {
   const error = useRouteError();
   let errorMessage = 'An unexpected error occurred.';
@@ -234,6 +237,18 @@ export function ErrorBoundary() {
     errorStatus,
   });
 
+  // Check for 404 status and render the specific 404 component
+  if (errorStatus === 404) {
+    return (
+      <div className="error-404">
+        <h1>Page Not Found</h1>
+        <p>The page you are looking for does not exist.</p>
+        <a href="/" className="go-home-link">Go to Homepage</a>
+      </div>
+    );
+  }
+
+  // Generic error fallback for other error statuses
   return (
     <div className="error-container">
       <h1>Error</h1>
