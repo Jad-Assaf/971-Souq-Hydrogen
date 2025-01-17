@@ -11,7 +11,6 @@ import {
   Image,
   Money,
   Analytics,
-  VariantSelector,
   getSeoMeta,
 } from '@shopify/hydrogen';
 import {useVariantUrl} from '~/lib/variants';
@@ -25,6 +24,9 @@ import {AddToCartButton} from '../components/AddToCartButton';
 import {useAside} from '~/components/Aside';
 import '../styles/HomeSlider.css';
 
+/**
+ * Utility function to truncate text to a specified number of words
+ */
 function truncateText(text, maxWords) {
   if (!text || typeof text !== 'string') {
     return ''; // Return an empty string if text is undefined or not a string
@@ -36,7 +38,7 @@ function truncateText(text, maxWords) {
 }
 
 /**
- * @type {MetaFunction<typeof loader>}
+ * Meta Function for SEO
  */
 export const meta = ({data}) => {
   const collection = data?.collection;
@@ -190,51 +192,23 @@ export const meta = ({data}) => {
 };
 
 /**
- * @param {LoaderFunctionArgs} args
+ * Loader Function to Fetch Critical Data
  */
-export async function loader(args) {
-  const deferredData = loadDeferredData(args);
-  const criticalData = await loadCriticalData(args);
-  return defer({...deferredData, ...criticalData});
-}
-
-/**
- * Load data necessary for rendering content above the fold. This is the critical data
- * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
- * @param {LoaderFunctionArgs}
- */
-export async function loadCriticalData({context, params, request}) {
-  const {handle} = params;
+export async function loader({context, params, request}) {
   const {storefront} = context;
-  const searchParams = new URL(request.url).searchParams;
+  const {handle} = params;
+  const url = new URL(request.url);
+  const searchParams = url.searchParams;
 
-  // Extract the 'page' query parameter, default to 1 if not present
-  const page = parseInt(searchParams.get('page') || '1', 10);
-  const pageSize = 20; // Items per page
+  // Extract 'after' and 'before' cursors
+  const after = searchParams.get('after') || null;
+  const before = searchParams.get('before') || null;
 
-  // Calculate 'first' and 'after' based on the current page
-  let first = pageSize;
-  let after = null;
-
-  if (page > 1) {
-    // To get the cursor for the current page, you might need to fetch the previous pages
-    // This is a simplified approach; in a real-world scenario, you'd store cursors
-    // or use another method to map pages to cursors.
-    // Here, we'll assume 'getPaginationVariables' handles it.
-    const paginationVariables = getPaginationVariables(request, {
-      pageBy: pageSize,
-      page,
-    });
-    first = paginationVariables.first;
-    after = paginationVariables.after;
-  }
-
-  // Set default sort to 'newest' if no sort parameter is provided
+  // Handle sorting
   const sort = searchParams.get('sort') || 'newest';
   let sortKey;
   let reverse = false;
 
-  // Map sort values to Shopify's sortKey and reverse
   switch (sort) {
     case 'price-low-high':
       sortKey = 'PRICE';
@@ -261,7 +235,12 @@ export async function loadCriticalData({context, params, request}) {
   for (const [key, value] of searchParams.entries()) {
     if (key.startsWith(FILTER_URL_PREFIX)) {
       const filterKey = key.replace(FILTER_URL_PREFIX, '');
-      filters.push({[filterKey]: JSON.parse(value)});
+      try {
+        const parsedValue = JSON.parse(value);
+        filters.push({[filterKey]: parsedValue});
+      } catch (err) {
+        console.error(`Invalid filter value for key ${filterKey}:`, value);
+      }
     }
   }
 
@@ -270,12 +249,14 @@ export async function loadCriticalData({context, params, request}) {
   }
 
   try {
-    // Fetch main collection with pagination
+    // Fetch the collection with products based on pagination, sorting, and filters
     const {collection} = await storefront.query(COLLECTION_QUERY, {
       variables: {
         handle,
-        first,
-        after,
+        first: after || (!before ? 20 : null),
+        last: before ? 20 : null,
+        after: after,
+        before: before,
         filters: filters.length ? filters : undefined,
         sortKey,
         reverse,
@@ -333,17 +314,17 @@ export async function loadCriticalData({context, params, request}) {
     searchParams.forEach((value, key) => {
       if (key.startsWith(FILTER_URL_PREFIX)) {
         const filterKey = key.replace(FILTER_URL_PREFIX, '');
-        const filterValue = JSON.parse(value);
-        appliedFilters.push({
-          label: `${value}`,
-          filter: {[filterKey]: filterValue},
-        });
+        try {
+          const filterValue = JSON.parse(value);
+          appliedFilters.push({
+            label: `${filterValue}`,
+            filter: {[filterKey]: filterValue},
+          });
+        } catch (err) {
+          console.error(`Invalid filter value for key ${filterKey}:`, value);
+        }
       }
     });
-
-    // Calculate total pages
-    const totalCount = collection.products.totalCount;
-    const totalPages = Math.ceil(totalCount / pageSize);
 
     // Extend return object with SEO and image data
     return {
@@ -356,10 +337,12 @@ export async function loadCriticalData({context, params, request}) {
           collection?.seo?.description || collection.description || '',
         image: collection?.image?.url || null,
       },
-      currentPage: page,
-      totalPages,
-      hasNextPage: collection.products.pageInfo.hasNextPage,
-      hasPreviousPage: collection.products.pageInfo.hasPreviousPage,
+      // Pagination Info
+      pageInfo: collection.products.pageInfo,
+      cursors: {
+        after: collection.products.pageInfo.endCursor,
+        before: collection.products.pageInfo.startCursor,
+      },
     };
   } catch (error) {
     console.error('Error fetching collection:', error);
@@ -367,872 +350,21 @@ export async function loadCriticalData({context, params, request}) {
   }
 }
 
+/**
+ * Utility function to sanitize handles
+ */
 function sanitizeHandle(handle) {
   return handle
     .toLowerCase()
     .replace(/"/g, '') // Remove all quotes
-    .replace(/&/g, '') // Remove all quotes
+    .replace(/&/g, '') // Remove all ampersands
     .replace(/\./g, '-') // Replace periods with hyphens
-    .replace(/\s+/g, '-'); // Replace spaces with hyphens (keeping this from the original code)
+    .replace(/\s+/g, '-'); // Replace spaces with hyphens
 }
 
 /**
- * Load data for rendering content below the fold. This data is deferred and will be
- * fetched after the initial page load. If it's unavailable, the page should still 200.
- * Make sure to not throw any errors here, as it will cause the page to 500.
- * @param {LoaderFunctionArgs}
+ * GraphQL Queries
  */
-function loadDeferredData({context}) {
-  return {};
-}
-
-export default function Collection() {
-  const {
-    collection,
-    appliedFilters,
-    sliderCollections,
-    currentPage,
-    totalPages,
-    hasNextPage,
-    hasPreviousPage,
-  } = useLoaderData();
-  const [userSelectedNumberInRow, setUserSelectedNumberInRow] = useState(null); // Tracks user selection
-
-  const calculateNumberInRow = (width, userSelection) => {
-    if (userSelection !== null) return userSelection; // User override
-    return 1; // Default to 1
-  };
-
-  const [screenWidth, setScreenWidth] = useState(0);
-  const [numberInRow, setNumberInRow] = useState(1);
-
-  const isDesktop = useMediaQuery({minWidth: 1024});
-  const [searchParams] = useSearchParams();
-  const location = useLocation();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    const updateLayout = () => {
-      const width = window.innerWidth;
-      setScreenWidth(width);
-      setNumberInRow(calculateNumberInRow(width, userSelectedNumberInRow));
-    };
-
-    // Initial layout setup
-    updateLayout();
-
-    // Debounce function for resize
-    const debounce = (fn, delay) => {
-      let timeoutId;
-      return (...args) => {
-        clearTimeout(timeoutId);
-        timeoutId = setTimeout(() => fn(...args), delay);
-      };
-    };
-
-    const debouncedUpdateLayout = debounce(updateLayout, 100);
-
-    window.addEventListener('resize', debouncedUpdateLayout);
-
-    return () => {
-      window.removeEventListener('resize', debouncedUpdateLayout);
-    };
-  }, [userSelectedNumberInRow]); // Depend on user selection for updates
-
-  const handleLayoutChange = (number) => {
-    setUserSelectedNumberInRow(number); // Save user preference
-    setNumberInRow(number); // Immediately update the layout
-  };
-
-  const handleFilterRemove = (filter) => {
-    const updatedParams = new URLSearchParams(searchParams.toString());
-    updatedParams.delete('direction');
-    updatedParams.delete('cursor');
-
-    const newUrl = getAppliedFilterLink(filter, updatedParams, location);
-    navigate(newUrl);
-  };
-
-  useEffect(() => {
-    const url = new URL(window.location.href);
-    const query = url.searchParams;
-
-    // Remove unwanted query parameters
-    query.delete('direction');
-    query.delete('cursor');
-
-    const cleanUrl = `${url.origin}${url.pathname}?${query.toString()}`;
-    window.history.replaceState({}, '', cleanUrl);
-  }, []);
-
-  const sortedProducts = React.useMemo(() => {
-    if (!collection?.products?.nodes) return [];
-    const products = [...collection.products.nodes];
-    return products.sort((a, b) => {
-      const aInStock = a.variants.nodes.some(
-        (variant) => variant.availableForSale,
-      );
-      const bInStock = b.variants.nodes.some(
-        (variant) => variant.availableForSale,
-      );
-
-      if (aInStock && !bInStock) return -1;
-      if (!aInStock && bInStock) return 1;
-      return 0;
-    });
-  }, [collection?.products?.nodes]);
-
-  useEffect(() => {
-    const url = new URL(window.location.href);
-    const query = url.search;
-
-    if (query.includes('?direction')) {
-      const cleanUrl = url.origin + url.pathname;
-      window.history.replaceState({}, '', cleanUrl);
-    }
-  }, []);
-
-  return (
-    <div className="collection">
-      <h1>{collection.title}</h1>
-
-      {sliderCollections && sliderCollections.length > 0 && (
-        <div className="slide-con">
-          <div className="category-slider">
-            {sliderCollections.map(
-              (sliderCollection) =>
-                sliderCollection && (
-                  <Link
-                    key={sliderCollection.id}
-                    to={`/collections/${sliderCollection.handle}`}
-                    className="category-container"
-                  >
-                    {sliderCollection.image && (
-                      <Image
-                        sizes="(min-width: 45em) 20vw, 40vw"
-                        src={`${sliderCollection.image.url}?width=600&quality=7`}
-                        srcSet={`${sliderCollection.image.url}?width=300&quality=7 300w,
-                                 ${sliderCollection.image.url}?width=600&quality=7 600w,
-                                 ${sliderCollection.image.url}?width=1200&quality=7 1200w`}
-                        alt={
-                          sliderCollection.image.altText ||
-                          sliderCollection.title
-                        }
-                        className="category-image"
-                        width={150}
-                        height={150}
-                        loading="eager"
-                      />
-                    )}
-                    <div className="category-title">
-                      {sliderCollection.title}
-                    </div>
-                  </Link>
-                ),
-            )}
-          </div>
-        </div>
-      )}
-
-      <div className="flex flex-col lg:flex-row w-[100%]">
-        {isDesktop && (
-          <div className="w-[220px]">
-            <FiltersDrawer
-              filters={collection.products.filters}
-              appliedFilters={appliedFilters}
-              collections={[
-                {handle: 'apple', title: 'Apple'},
-                {handle: 'gaming', title: 'Gaming'},
-                {handle: 'laptops', title: 'Laptops'},
-                {handle: 'desktops', title: 'Desktops'},
-                {handle: 'pc-parts', title: 'PC Parts'},
-                {handle: 'networking', title: 'Networking'},
-                {handle: 'monitors', title: 'Monitors'},
-                {handle: 'mobiles', title: 'Mobile Phones'},
-                {handle: 'tablets', title: 'Tablets'},
-                {handle: 'audio', title: 'Audio'},
-                {handle: 'accessories', title: 'Accessories'},
-                {handle: 'fitness', title: 'Fitness'},
-                {handle: 'photography', title: 'Photography'},
-                {handle: 'home-appliances', title: 'Home Appliances'},
-              ]}
-              onRemoveFilter={handleFilterRemove}
-            />
-          </div>
-        )}
-
-        <div className="flex-1 mt-[94px]">
-          <hr className="col-hr"></hr>
-
-          <div className="view-container">
-            <div className="layout-controls">
-              <span className="number-sort">View As:</span>
-              {screenWidth >= 300 && (
-                <button
-                  className={`layout-buttons first-btn ${
-                    numberInRow === 1 ? 'active' : ''
-                  }`}
-                  onClick={() => handleLayoutChange(1)}
-                >
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
-                    <g
-                      id="SVGRepo_tracerCarrier"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    ></g>
-                    <g id="SVGRepo_iconCarrier">
-                      <path
-                        d="M2 6C2 5.44772 2.44772 5 3 5H21C21.5523 5 22 5.44772 22 6C22 6.55228 21.5523 7 21 7H3C2.44772 7 2 6.55228 2 6Z"
-                        fill="#808080"
-                      ></path>
-                      <path
-                        d="M2 12C2 11.4477 2.44772 11 3 11H21C21.5523 11 22 11.4477 22 12C22 12.5523 21.5523 13 21 13H3C2.44772 13 2 12.5523 2 12Z"
-                        fill="#808080"
-                      ></path>
-                      <path
-                        d="M3 17C2.44772 17 2 17.4477 2 18C2 18.5523 2.44772 19 3 19H21C21.5523 19 22 18.5523 22 18C22 17.4477 21.5523 17 21 17H3Z"
-                        fill="#808080"
-                      ></path>
-                    </g>
-                  </svg>
-                </button>
-              )}
-              {screenWidth >= 300 && (
-                <button
-                  className={`layout-buttons ${
-                    numberInRow === 2 ? 'active' : ''
-                  }`}
-                  onClick={() => handleLayoutChange(2)}
-                >
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    stroke="#808080"
-                  >
-                    <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
-                    <g
-                      id="SVGRepo_tracerCarrier"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    ></g>
-                    <g id="SVGRepo_iconCarrier">
-                      <g id="Interface / Line_L">
-                        <path
-                          id="Vector"
-                          d="M12 19V5"
-                          stroke="#808080"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        ></path>
-                      </g>
-                    </g>
-                  </svg>
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    stroke="#808080"
-                  >
-                    <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
-                    <g
-                      id="SVGRepo_tracerCarrier"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    ></g>
-                    <g id="SVGRepo_iconCarrier">
-                      <g id="Interface / Line_L">
-                        <path
-                          id="Vector"
-                          d="M12 19V5"
-                          stroke="#808080"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        ></path>
-                      </g>
-                    </g>
-                  </svg>
-                </button>
-              )}
-              {screenWidth >= 550 && (
-                <button
-                  className={`layout-buttons ${
-                    numberInRow === 3 ? 'active' : ''
-                  }`}
-                  onClick={() => handleLayoutChange(3)}
-                >
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    stroke="#808080"
-                  >
-                    <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
-                    <g
-                      id="SVGRepo_tracerCarrier"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    ></g>
-                    <g id="SVGRepo_iconCarrier">
-                      <g id="Interface / Line_L">
-                        <path
-                          id="Vector"
-                          d="M12 19V5"
-                          stroke="#808080"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        ></path>
-                      </g>
-                    </g>
-                  </svg>
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    stroke="#808080"
-                  >
-                    <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
-                    <g
-                      id="SVGRepo_tracerCarrier"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    ></g>
-                    <g id="SVGRepo_iconCarrier">
-                      <g id="Interface / Line_L">
-                        <path
-                          id="Vector"
-                          d="M12 19V5"
-                          stroke="#808080"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        ></path>
-                      </g>
-                    </g>
-                  </svg>
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    stroke="#808080"
-                  >
-                    <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
-                    <g
-                      id="SVGRepo_tracerCarrier"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    ></g>
-                    <g id="SVGRepo_iconCarrier">
-                      <g id="Interface / Line_L">
-                        <path
-                          id="Vector"
-                          d="M12 19V5"
-                          stroke="#808080"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        ></path>
-                      </g>
-                    </g>
-                  </svg>
-                </button>
-              )}
-              {screenWidth >= 1200 && (
-                <button
-                  className={`layout-buttons ${
-                    numberInRow === 4 ? 'active' : ''
-                  }`}
-                  onClick={() => handleLayoutChange(4)}
-                >
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    stroke="#808080"
-                  >
-                    <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
-                    <g
-                      id="SVGRepo_tracerCarrier"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    ></g>
-                    <g id="SVGRepo_iconCarrier">
-                      <g id="Interface / Line_L">
-                        <path
-                          id="Vector"
-                          d="M12 19V5"
-                          stroke="#808080"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        ></path>
-                      </g>
-                    </g>
-                  </svg>
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    stroke="#808080"
-                  >
-                    <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
-                    <g
-                      id="SVGRepo_tracerCarrier"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    ></g>
-                    <g id="SVGRepo_iconCarrier">
-                      <g id="Interface / Line_L">
-                        <path
-                          id="Vector"
-                          d="M12 19V5"
-                          stroke="#808080"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        ></path>
-                      </g>
-                    </g>
-                  </svg>
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    stroke="#808080"
-                  >
-                    <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
-                    <g
-                      id="SVGRepo_tracerCarrier"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    ></g>
-                    <g id="SVGRepo_iconCarrier">
-                      <g id="Interface / Line_L">
-                        <path
-                          id="Vector"
-                          d="M12 19V5"
-                          stroke="#808080"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        ></path>
-                      </g>
-                    </g>
-                  </svg>
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    stroke="#808080"
-                  >
-                    <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
-                    <g
-                      id="SVGRepo_tracerCarrier"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    ></g>
-                    <g id="SVGRepo_iconCarrier">
-                      <g id="Interface / Line_L">
-                        <path
-                          id="Vector"
-                          d="M12 19V5"
-                          stroke="#808080"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        ></path>
-                      </g>
-                    </g>
-                  </svg>
-                </button>
-              )}
-              {screenWidth >= 1500 && (
-                <button
-                  className={`layout-buttons ${
-                    numberInRow === 5 ? 'active' : ''
-                  }`}
-                  onClick={() => handleLayoutChange(5)}
-                >
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    stroke="#808080"
-                  >
-                    <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
-                    <g
-                      id="SVGRepo_tracerCarrier"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    ></g>
-                    <g id="SVGRepo_iconCarrier">
-                      <g id="Interface / Line_L">
-                        <path
-                          id="Vector"
-                          d="M12 19V5"
-                          stroke="#808080"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        ></path>
-                      </g>
-                    </g>
-                  </svg>
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    stroke="#808080"
-                  >
-                    <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
-                    <g
-                      id="SVGRepo_tracerCarrier"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    ></g>
-                    <g id="SVGRepo_iconCarrier">
-                      <g id="Interface / Line_L">
-                        <path
-                          id="Vector"
-                          d="M12 19V5"
-                          stroke="#808080"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        ></path>
-                      </g>
-                    </g>
-                  </svg>
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    stroke="#808080"
-                  >
-                    <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
-                    <g
-                      id="SVGRepo_tracerCarrier"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    ></g>
-                    <g id="SVGRepo_iconCarrier">
-                      <g id="Interface / Line_L">
-                        <path
-                          id="Vector"
-                          d="M12 19V5"
-                          stroke="#808080"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        ></path>
-                      </g>
-                    </g>
-                  </svg>
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    stroke="#808080"
-                  >
-                    <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
-                    <g
-                      id="SVGRepo_tracerCarrier"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    ></g>
-                    <g id="SVGRepo_iconCarrier">
-                      <g id="Interface / Line_L">
-                        <path
-                          id="Vector"
-                          d="M12 19V5"
-                          stroke="#808080"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        ></path>
-                      </g>
-                    </g>
-                  </svg>
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    stroke="#808080"
-                  >
-                    <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
-                    <g
-                      id="SVGRepo_tracerCarrier"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    ></g>
-                    <g id="SVGRepo_iconCarrier">
-                      <g id="Interface / Line_L">
-                        <path
-                          id="Vector"
-                          d="M12 19V5"
-                          stroke="#808080"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        ></path>
-                      </g>
-                    </g>
-                  </svg>
-                </button>
-              )}
-            </div>
-            <DrawerFilter
-              filters={collection.products.filters}
-              appliedFilters={appliedFilters}
-              numberInRow={numberInRow}
-              onLayoutChange={handleLayoutChange}
-              productNumber={collection.products.nodes.length}
-              isDesktop={isDesktop}
-            />
-          </div>
-
-          {/* Product Grid */}
-          <div className={`products-grid grid-cols-${numberInRow}`}>
-            {sortedProducts.map((product, index) => (
-              <ProductItem
-                key={product.id}
-                product={product}
-                index={index}
-                numberInRow={numberInRow}
-              />
-            ))}
-          </div>
-
-          {/* Pagination Controls */}
-          <div className="pagination-controls">
-            <button
-              onClick={() => {
-                if (hasPreviousPage && currentPage > 1) {
-                  const newPage = currentPage - 1;
-                  const params = new URLSearchParams(searchParams.toString());
-                  params.set('page', newPage);
-                  navigate(`?${params.toString()}`);
-                }
-              }}
-              disabled={!hasPreviousPage || currentPage === 1}
-              className="pagination-button"
-            >
-              Previous
-            </button>
-
-            {/* Page Numbers */}
-            <div className="page-numbers">
-              {Array.from({length: totalPages}, (_, i) => i + 1).map(
-                (pageNumber) => (
-                  <button
-                    key={pageNumber}
-                    onClick={() => {
-                      const params = new URLSearchParams(
-                        searchParams.toString(),
-                      );
-                      params.set('page', pageNumber);
-                      navigate(`?${params.toString()}`);
-                    }}
-                    className={`page-number ${
-                      currentPage === pageNumber ? 'active' : ''
-                    }`}
-                  >
-                    {pageNumber}
-                  </button>
-                ),
-              )}
-            </div>
-
-            <button
-              onClick={() => {
-                if (hasNextPage) {
-                  const newPage = currentPage + 1;
-                  const params = new URLSearchParams(searchParams.toString());
-                  params.set('page', newPage);
-                  navigate(`?${params.toString()}`);
-                }
-              }}
-              disabled={!hasNextPage}
-              className="pagination-button"
-            >
-              Next
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <Analytics.CollectionView
-        data={{
-          collection: {
-            id: collection.id,
-            handle: collection.handle,
-          },
-        }}
-      />
-    </div>
-  );
-}
-
-/**
- * @param {{
- *   product: ProductItemFragment;
- *   loading?: 'eager' | 'lazy';
- * }}
- */
-const ProductItem = React.memo(({product, index, numberInRow}) => {
-  const ref = useRef(null);
-  const [isSoldOut, setIsSoldOut] = useState(false);
-
-  useEffect(() => {
-    // Check if the product is sold out (no variants are available for sale)
-    const soldOut = !product.variants.nodes.some(
-      (variant) => variant.availableForSale,
-    );
-    setIsSoldOut(soldOut); // Update the state
-  }, [product]);
-
-  const [selectedVariant, setSelectedVariant] = useState(() => {
-    return product.variants.nodes[0];
-  });
-
-  const variantUrl = useVariantUrl(
-    product.handle,
-    selectedVariant.selectedOptions,
-  );
-
-  const hasDiscount =
-    product.compareAtPriceRange &&
-    product.compareAtPriceRange.minVariantPrice.amount >
-      product.priceRange.minVariantPrice.amount;
-
-  return (
-    <div className="product-item-collection product-card" ref={ref}>
-      <div>
-        <div className="mobile-container">
-          <Link
-            key={product.id}
-            prefetch="intent"
-            to={variantUrl}
-            className="collection-product-link"
-          >
-            {product.featuredImage && (
-              <div className="collection-product-image">
-                {/* Sold-out banner */}
-                <div
-                  className="sold-out-ban"
-                  style={{display: isSoldOut ? 'block' : 'none'}} // Conditionally displayed
-                >
-                  <p>Sold Out</p>
-                </div>
-                <Image
-                  src={`${product.featuredImage.url}?width=300&quality=15`}
-                  srcSet={`${product.featuredImage.url}?width=300&quality=15 300w,
-                           ${product.featuredImage.url}?width=600&quality=15 600w,
-                           ${product.featuredImage.url}?width=1200&quality=15 1200w`}
-                  alt={product.featuredImage.altText || product.title}
-                  loading="lazy"
-                  width="180px"
-                  height="180px"
-                />
-              </div>
-            )}
-          </Link>
-          <div className="product-info-container">
-            <Link key={product.id} prefetch="intent" to={variantUrl}>
-              <h4>{truncateText(product.title, 30)}</h4>
-              <p className="product-description">
-                {truncateText(product.description, 90)}
-              </p>
-              <div className="price-container">
-                <small
-                  className={`product-price ${hasDiscount ? 'discounted' : ''}`}
-                >
-                  <Money data={selectedVariant.price} />
-                </small>
-                {/* {hasDiscount && selectedVariant.compareAtPrice && (
-                  <small className="discountedPrice">
-                    <Money data={selectedVariant.compareAtPrice} />
-                  </small>
-                )} */}
-              </div>
-            </Link>
-            <ProductForm
-              product={product}
-              selectedVariant={selectedVariant}
-              setSelectedVariant={setSelectedVariant}
-            />
-          </div>
-        </div>
-        <ProductForm
-          product={product}
-          selectedVariant={selectedVariant}
-          setSelectedVariant={setSelectedVariant}
-        />
-      </div>
-    </div>
-  );
-});
-
-/**
- * @param {{
- *   product: ProductFragment;
- *   selectedVariant: ProductVariantFragment;
- *   setSelectedVariant: (variant: ProductVariantFragment) => void;
- * }}
- */
-function ProductForm({product, selectedVariant, setSelectedVariant}) {
-  const {open} = useAside();
-  const hasVariants = product.variants.nodes.length > 1;
-
-  return (
-    <div className="product-form">
-      <AddToCartButton
-        disabled={!selectedVariant || !selectedVariant.availableForSale}
-        onClick={() => {
-          if (hasVariants) {
-            // Navigate to product page
-            window.location.href = `/products/${encodeURIComponent(
-              product.handle,
-            )}`;
-          } else {
-            open('cart');
-          }
-        }}
-        lines={
-          selectedVariant && !hasVariants
-            ? [
-                {
-                  merchandiseId: selectedVariant.id,
-                  quantity: 1,
-                  attributes: [],
-                  product: {
-                    ...product,
-                    selectedVariant,
-                    handle: product.handle,
-                  },
-                },
-              ]
-            : []
-        }
-      >
-        {!selectedVariant?.availableForSale
-          ? 'Sold out'
-          : hasVariants
-          ? 'Select Options'
-          : 'Add to cart'}
-      </AddToCartButton>
-    </div>
-  );
-}
-
 const MENU_QUERY = `#graphql
   query GetMenu($handle: String!) {
     menu(handle: $handle) {
@@ -1338,7 +470,9 @@ const COLLECTION_QUERY = `#graphql
     $sortKey: ProductCollectionSortKeys
     $reverse: Boolean
     $first: Int
+    $last: Int
     $after: String
+    $before: String
   ) {
     collection(handle: $handle) {
       id
@@ -1355,12 +489,13 @@ const COLLECTION_QUERY = `#graphql
       }
       products(
         first: $first,
+        last: $last,
         after: $after,
+        before: $before,
         filters: $filters,
         sortKey: $sortKey,
         reverse: $reverse
       ) {
-        totalCount
         filters {
           id
           label
@@ -1387,7 +522,650 @@ const COLLECTION_QUERY = `#graphql
   }
 `;
 
+/**
+ * React Component for Collection Page with Cursor-Based Pagination
+ */
+export default function Collection() {
+  const {
+    collection,
+    appliedFilters,
+    sliderCollections,
+    pageInfo,
+    cursors,
+    seo,
+  } = useLoaderData();
+  const [userSelectedNumberInRow, setUserSelectedNumberInRow] = useState(null); // Tracks user selection
+
+  const calculateNumberInRow = (width, userSelection) => {
+    if (userSelection !== null) return userSelection; // User override
+    return 1; // Default to 1
+  };
+
+  const [screenWidth, setScreenWidth] = useState(0);
+  const [numberInRow, setNumberInRow] = useState(1);
+
+  const isDesktop = useMediaQuery({minWidth: 1024});
+  const [searchParams] = useSearchParams();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const updateLayout = () => {
+      const width = window.innerWidth;
+      setScreenWidth(width);
+      setNumberInRow(calculateNumberInRow(width, userSelectedNumberInRow));
+    };
+
+    // Initial layout setup
+    updateLayout();
+
+    // Debounce function for resize
+    const debounce = (fn, delay) => {
+      let timeoutId;
+      return (...args) => {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => fn(...args), delay);
+      };
+    };
+
+    const debouncedUpdateLayout = debounce(updateLayout, 100);
+
+    window.addEventListener('resize', debouncedUpdateLayout);
+
+    return () => {
+      window.removeEventListener('resize', debouncedUpdateLayout);
+    };
+  }, [userSelectedNumberInRow]); // Depend on user selection for updates
+
+  const handleLayoutChange = (number) => {
+    setUserSelectedNumberInRow(number); // Save user preference
+    setNumberInRow(number); // Immediately update the layout
+  };
+
+  const handleFilterRemove = (filter) => {
+    const updatedParams = new URLSearchParams(searchParams.toString());
+    updatedParams.delete('after');
+    updatedParams.delete('before');
+
+    const newUrl = getAppliedFilterLink(filter, updatedParams, location);
+    navigate(newUrl);
+  };
+
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    const query = url.searchParams;
+
+    // Remove unwanted query parameters
+    query.delete('direction');
+    query.delete('cursor');
+
+    const cleanUrl = `${url.origin}${url.pathname}?${query.toString()}`;
+    window.history.replaceState({}, '', cleanUrl);
+  }, []);
+
+  const sortedProducts = React.useMemo(() => {
+    if (!collection?.products?.nodes) return [];
+    const products = [...collection.products.nodes];
+    return products.sort((a, b) => {
+      const aInStock = a.variants.nodes.some(
+        (variant) => variant.availableForSale,
+      );
+      const bInStock = b.variants.nodes.some(
+        (variant) => variant.availableForSale,
+      );
+
+      if (aInStock && !bInStock) return -1;
+      if (!aInStock && bInStock) return 1;
+      return 0;
+    });
+  }, [collection?.products?.nodes]);
+
+  /**
+   * Handler for "Next" button
+   */
+  const goNext = () => {
+    if (!pageInfo.hasNextPage) return;
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('after', pageInfo.endCursor);
+    params.delete('before');
+    navigate(`?${params.toString()}`);
+  };
+
+  /**
+   * Handler for "Previous" button
+   */
+  const goPrev = () => {
+    if (!pageInfo.hasPreviousPage) return;
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('before', pageInfo.startCursor);
+    params.delete('after');
+    navigate(`?${params.toString()}`);
+  };
+
+  return (
+    <div className="collection">
+      <h1>{collection.title}</h1>
+
+      {sliderCollections && sliderCollections.length > 0 && (
+        <div className="slide-con">
+          <div className="category-slider">
+            {sliderCollections.map(
+              (sliderCollection) =>
+                sliderCollection && (
+                  <Link
+                    key={sliderCollection.id}
+                    to={`/collections/${sliderCollection.handle}`}
+                    className="category-container"
+                  >
+                    {sliderCollection.image && (
+                      <Image
+                        sizes="(min-width: 45em) 20vw, 40vw"
+                        src={`${sliderCollection.image.url}?width=600&quality=7`}
+                        srcSet={`${sliderCollection.image.url}?width=300&quality=7 300w,
+                                 ${sliderCollection.image.url}?width=600&quality=7 600w,
+                                 ${sliderCollection.image.url}?width=1200&quality=7 1200w`}
+                        alt={
+                          sliderCollection.image.altText ||
+                          sliderCollection.title
+                        }
+                        className="category-image"
+                        width={150}
+                        height={150}
+                        loading="eager"
+                      />
+                    )}
+                    <div className="category-title">
+                      {sliderCollection.title}
+                    </div>
+                  </Link>
+                ),
+            )}
+          </div>
+        </div>
+      )}
+
+      <div className="flex flex-col lg:flex-row w-[100%]">
+        {isDesktop && (
+          <div className="w-[220px]">
+            <FiltersDrawer
+              filters={collection.products.filters}
+              appliedFilters={appliedFilters}
+              collections={[
+                {handle: 'apple', title: 'Apple'},
+                {handle: 'gaming', title: 'Gaming'},
+                {handle: 'laptops', title: 'Laptops'},
+                {handle: 'desktops', title: 'Desktops'},
+                {handle: 'pc-parts', title: 'PC Parts'},
+                {handle: 'networking', title: 'Networking'},
+                {handle: 'monitors', title: 'Monitors'},
+                {handle: 'mobiles', title: 'Mobile Phones'},
+                {handle: 'tablets', title: 'Tablets'},
+                {handle: 'audio', title: 'Audio'},
+                {handle: 'accessories', title: 'Accessories'},
+                {handle: 'fitness', title: 'Fitness'},
+                {handle: 'photography', title: 'Photography'},
+                {handle: 'home-appliances', title: 'Home Appliances'},
+              ]}
+              onRemoveFilter={handleFilterRemove}
+            />
+          </div>
+        )}
+
+        <div className="flex-1 mt-[94px]">
+          <hr className="col-hr"></hr>
+
+          <div className="view-container">
+            <div className="layout-controls">
+              <span className="number-sort">View As:</span>
+              {screenWidth >= 300 && (
+                <button
+                  className={`layout-buttons first-btn ${
+                    numberInRow === 1 ? 'active' : ''
+                  }`}
+                  onClick={() => handleLayoutChange(1)}
+                >
+                  {/* SVG Icon */}
+                  {/* ... Your SVG code ... */}1
+                </button>
+              )}
+              {screenWidth >= 300 && (
+                <button
+                  className={`layout-buttons ${
+                    numberInRow === 2 ? 'active' : ''
+                  }`}
+                  onClick={() => handleLayoutChange(2)}
+                >
+                  {/* SVG Icon */}
+                  {/* ... Your SVG code ... */}2
+                </button>
+              )}
+              {screenWidth >= 550 && (
+                <button
+                  className={`layout-buttons ${
+                    numberInRow === 3 ? 'active' : ''
+                  }`}
+                  onClick={() => handleLayoutChange(3)}
+                >
+                  {/* SVG Icon */}
+                  {/* ... Your SVG code ... */}3
+                </button>
+              )}
+              {screenWidth >= 1200 && (
+                <button
+                  className={`layout-buttons ${
+                    numberInRow === 4 ? 'active' : ''
+                  }`}
+                  onClick={() => handleLayoutChange(4)}
+                >
+                  {/* SVG Icon */}
+                  {/* ... Your SVG code ... */}4
+                </button>
+              )}
+              {screenWidth >= 1500 && (
+                <button
+                  className={`layout-buttons ${
+                    numberInRow === 5 ? 'active' : ''
+                  }`}
+                  onClick={() => handleLayoutChange(5)}
+                >
+                  {/* SVG Icon */}
+                  {/* ... Your SVG code ... */}5
+                </button>
+              )}
+            </div>
+            <DrawerFilter
+              filters={collection.products.filters}
+              appliedFilters={appliedFilters}
+              numberInRow={numberInRow}
+              onLayoutChange={handleLayoutChange}
+              productNumber={collection.products.nodes.length}
+              isDesktop={isDesktop}
+            />
+          </div>
+
+          {/* Product Grid */}
+          <div className={`products-grid grid-cols-${numberInRow}`}>
+            {sortedProducts.map((product, index) => (
+              <ProductItem
+                key={product.id}
+                product={product}
+                index={index}
+                numberInRow={numberInRow}
+              />
+            ))}
+          </div>
+
+          {/* Pagination Controls */}
+          <div className="pagination-controls">
+            <button
+              onClick={goPrev}
+              disabled={!pageInfo.hasPreviousPage}
+              className="pagination-button"
+            >
+              ← Previous Page
+            </button>
+
+            <button
+              onClick={goNext}
+              disabled={!pageInfo.hasNextPage}
+              className="pagination-button"
+            >
+              Next Page →
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <Analytics.CollectionView
+        data={{
+          collection: {
+            id: collection.id,
+            handle: collection.handle,
+          },
+        }}
+      />
+    </div>
+  );
+}
+
+/**
+ * ProductItem Component
+ */
+const ProductItem = React.memo(({product, index, numberInRow}) => {
+  const ref = useRef(null);
+  const [isSoldOut, setIsSoldOut] = useState(false);
+
+  useEffect(() => {
+    // Check if the product is sold out (no variants are available for sale)
+    const soldOut = !product.variants.nodes.some(
+      (variant) => variant.availableForSale,
+    );
+    setIsSoldOut(soldOut); // Update the state
+  }, [product]);
+
+  const [selectedVariant, setSelectedVariant] = useState(() => {
+    return product.variants.nodes[0];
+  });
+
+  const variantUrl = useVariantUrl(
+    product.handle,
+    selectedVariant.selectedOptions,
+  );
+
+  const hasDiscount =
+    product.compareAtPriceRange &&
+    product.compareAtPriceRange.minVariantPrice.amount >
+      product.priceRange.minVariantPrice.amount;
+
+  return (
+    <div className="product-item-collection product-card" ref={ref}>
+      <div>
+        <div className="mobile-container">
+          <Link
+            key={product.id}
+            prefetch="intent"
+            to={variantUrl}
+            className="collection-product-link"
+          >
+            {product.featuredImage && (
+              <div className="collection-product-image">
+                {/* Sold-out banner */}
+                {isSoldOut && (
+                  <div className="sold-out-ban">
+                    <p>Sold Out</p>
+                  </div>
+                )}
+                <Image
+                  src={`${product.featuredImage.url}?width=300&quality=15`}
+                  srcSet={`${product.featuredImage.url}?width=300&quality=15 300w,
+                           ${product.featuredImage.url}?width=600&quality=15 600w,
+                           ${product.featuredImage.url}?width=1200&quality=15 1200w`}
+                  alt={product.featuredImage.altText || product.title}
+                  loading="lazy"
+                  width="180px"
+                  height="180px"
+                />
+              </div>
+            )}
+          </Link>
+          <div className="product-info-container">
+            <Link key={product.id} prefetch="intent" to={variantUrl}>
+              <h4>{truncateText(product.title, 30)}</h4>
+              <p className="product-description">
+                {truncateText(product.description, 90)}
+              </p>
+              <div className="price-container">
+                <small
+                  className={`product-price ${hasDiscount ? 'discounted' : ''}`}
+                >
+                  <Money data={selectedVariant.price} />
+                </small>
+                {/* Optional: Uncomment if you want to show compare at price
+                {hasDiscount && selectedVariant.compareAtPrice && (
+                  <small className="discountedPrice">
+                    <Money data={selectedVariant.compareAtPrice} />
+                  </small>
+                )} */}
+              </div>
+            </Link>
+            <ProductForm
+              product={product}
+              selectedVariant={selectedVariant}
+              setSelectedVariant={setSelectedVariant}
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+});
+
+/**
+ * ProductForm Component
+ */
+function ProductForm({product, selectedVariant, setSelectedVariant}) {
+  const {open} = useAside();
+  const hasVariants = product.variants.nodes.length > 1;
+
+  return (
+    <div className="product-form">
+      <AddToCartButton
+        disabled={!selectedVariant || !selectedVariant.availableForSale}
+        onClick={() => {
+          if (hasVariants) {
+            // Navigate to product page
+            window.location.href = `/products/${encodeURIComponent(
+              product.handle,
+            )}`;
+          } else {
+            open('cart');
+          }
+        }}
+        lines={
+          selectedVariant && !hasVariants
+            ? [
+                {
+                  merchandiseId: selectedVariant.id,
+                  quantity: 1,
+                  attributes: [],
+                  product: {
+                    ...product,
+                    selectedVariant,
+                    handle: product.handle,
+                  },
+                },
+              ]
+            : []
+        }
+      >
+        {!selectedVariant?.availableForSale
+          ? 'Sold out'
+          : hasVariants
+          ? 'Select Options'
+          : 'Add to cart'}
+      </AddToCartButton>
+    </div>
+  );
+}
+
+/**
+ * GraphQL Queries Fragments and Queries
+ */
+const MENU_QUERY = `#graphql
+  query GetMenu($handle: String!) {
+    menu(handle: $handle) {
+      items {
+        title
+        url
+      }
+    }
+  }
+`;
+
+const COLLECTION_BY_HANDLE_QUERY = `#graphql
+  query GetCollectionByHandle($handle: String!) {
+    collection(handle: $handle) {
+      id
+      title
+      description
+      handle
+      image {
+        url
+        altText
+      }
+    }
+  }
+`;
+
+const PRODUCT_ITEM_FRAGMENT = `#graphql
+  fragment MoneyProductItem on MoneyV2 {
+    amount
+    currencyCode
+  }
+  fragment ProductItem on Product {
+    id
+    handle
+    title
+    description
+    featuredImage {
+      id
+      altText
+      url
+      width
+      height
+    }
+    options {
+      name
+      values
+    }
+    priceRange {
+      minVariantPrice {
+        ...MoneyProductItem
+      }
+      maxVariantPrice {
+        ...MoneyProductItem
+      }
+    }
+    compareAtPriceRange {
+      minVariantPrice {
+        ...MoneyProductItem
+      }
+      maxVariantPrice {
+        ...MoneyProductItem
+      }
+    }
+    variants(first: 25) {
+      nodes {
+        id
+        availableForSale
+        selectedOptions {
+          name
+          value
+        }
+        image {
+          id
+          url
+          altText
+          width
+          height
+        }
+        price {
+          amount
+          currencyCode
+        }
+        compareAtPrice {
+          amount
+          currencyCode
+        }
+        sku
+        title
+        unitPrice {
+          amount
+          currencyCode
+        }
+      }
+    }
+  }
+`;
+
+const COLLECTION_QUERY = `#graphql
+  ${PRODUCT_ITEM_FRAGMENT}
+  query Collection(
+    $handle: String!
+    $filters: [ProductFilter!]
+    $sortKey: ProductCollectionSortKeys
+    $reverse: Boolean
+    $first: Int
+    $last: Int
+    $after: String
+    $before: String
+  ) {
+    collection(handle: $handle) {
+      id
+      handle
+      title
+      description
+      seo {
+        title
+        description
+      }
+      image {
+        url
+        altText
+      }
+      products(
+        first: $first,
+        last: $last,
+        after: $after,
+        before: $before,
+        filters: $filters,
+        sortKey: $sortKey,
+        reverse: $reverse
+      ) {
+        filters {
+          id
+          label
+          type
+          values {
+            id
+            label
+            count
+            input
+          }
+        }
+        nodes {
+          ...ProductItem
+          availableForSale
+        }
+        pageInfo {
+          hasPreviousPage
+          hasNextPage
+          endCursor
+          startCursor
+        }
+      }
+    }
+  }
+`;
+
+/**
+ * Helper Functions and Fragments
+ */
+
+// You can keep or adjust these as per your project structure
+
 /** @typedef {import('@shopify/remix-oxygen').LoaderFunctionArgs} LoaderFunctionArgs */
 /** @template T @typedef {import('@remix-run/react').MetaFunction<T>} MetaFunction */
 /** @typedef {import('storefrontapi.generated').ProductItemFragment} ProductItemFragment */
 /** @typedef {import('@shopify/remix-oxygen').SerializeFrom<typeof loader>} LoaderReturnData */
+
+/**
+ * Additional CSS for Pagination (Add to your CSS file)
+ *
+ * .pagination-controls {
+ *   display: flex;
+ *   justify-content: center;
+ *   align-items: center;
+ *   margin: 20px 0;
+ *   gap: 10px;
+ * }
+ *
+ * .pagination-button {
+ *   padding: 8px 16px;
+ *   border: none;
+ *   background-color: #808080;
+ *   color: #fff;
+ *   cursor: pointer;
+ *   border-radius: 4px;
+ *   transition: background-color 0.3s;
+ * }
+ *
+ * .pagination-button:disabled {
+ *   background-color: #ccc;
+ *   cursor: not-allowed;
+ * }
+ *
+ * .pagination-button:hover:not(:disabled) {
+ *   background-color: #606060;
+ * }
+ */
