@@ -83,9 +83,7 @@ export async function loader({request, context}) {
       filterQueryParts.push(`${shopifyKey}:"${values[0]}"`);
     } else {
       // multiple => (vendor:"Nike" OR vendor:"Adidas")
-      const orGroup = values
-        .map((v) => `${shopifyKey}:"${v}"`)
-        .join(' OR ');
+      const orGroup = values.map((v) => `${shopifyKey}:"${v}"`).join(' OR ');
       filterQueryParts.push(`(${orGroup})`);
     }
   }
@@ -93,21 +91,25 @@ export async function loader({request, context}) {
   // -----------------------------------------
   // Price range & text search
   // -----------------------------------------
-  const term = searchParams.get('q') || '';
+  const rawTerm = searchParams.get('q') || '';
   const minPrice = searchParams.get('minPrice');
   const maxPrice = searchParams.get('maxPrice');
-  if (minPrice) {
-    filterQueryParts.push(`variants.price:>${minPrice}`);
-  }
-  if (maxPrice) {
-    filterQueryParts.push(`variants.price:<${maxPrice}`);
-  }
 
-  // Combine term + filter parts with AND
-  let filterQuery = term.trim();
+  // Process the search term to include wildcards
+  const terms = rawTerm
+    .split(/\s+/)
+    .map((word) => word.trim())
+    .filter(Boolean)
+    .map((word) => `*${word}*`); // Add wildcards to each term
+
+  const termWithWildcards = terms.join(' AND '); // Combine with AND for multiple terms
+
+  // Now, use 'termWithWildcards' instead of 'term' in the filterQuery
+  let filterQuery = termWithWildcards;
+
   if (filterQueryParts.length > 0) {
     if (filterQuery) {
-      // e.g. "shoes AND (vendor:"Nike" OR vendor:"Adidas")"
+      // e.g. "*XM5* AND (vendor:"Nike" OR vendor:"Adidas")"
       filterQuery += ' AND ' + filterQueryParts.join(' AND ');
     } else {
       filterQuery = filterQueryParts.join(' AND ');
@@ -660,76 +662,76 @@ export default function SearchPage() {
  */
 const FILTERED_PRODUCTS_QUERY = `#graphql
   query FilteredProducts(
-    $filterQuery: String,
-    $sortKey: ProductSortKeys,
-    $reverse: Boolean,
-    $after: String,
-    $before: String,
-    $first: Int,
-    $last: Int
+  $filterQuery: String,
+  $sortKey: ProductSortKeys,
+  $reverse: Boolean,
+  $after: String,
+  $before: String,
+  $first: Int,
+  $last: Int
+) {
+  products(
+    query: $filterQuery,
+    sortKey: $sortKey,
+    reverse: $reverse,
+    after: $after,
+    before: $before,
+    first: $first,
+    last: $last
   ) {
-    products(
-      query: $filterQuery,
-      sortKey: $sortKey,
-      reverse: $reverse,
-      after: $after,
-      before: $before,
-      first: $first,
-      last: $last
-    ) {
-      edges {
-        node {
-          vendor
-          id
-          title
-          handle
-          productType
-          description
-          images(first: 3) {
-            nodes {
-              url
-              altText
-            }
+    edges {
+      node {
+        vendor
+        id
+        title
+        handle
+        productType
+        description
+        images(first: 3) {
+          nodes {
+            url
+            altText
           }
-          priceRange {
-            minVariantPrice {
+        }
+        priceRange {
+          minVariantPrice {
+            amount
+            currencyCode
+          }
+        }
+        variants(first: 1) {
+          nodes {
+            id
+            sku
+            price {
               amount
               currencyCode
             }
-          }
-          variants(first: 1) {
-            nodes {
-              id
-              sku
-              price {
-                amount
-                currencyCode
-              }
-              image {
-                url
-                altText
-              }
-              availableForSale
-              compareAtPrice {
-                amount
-                currencyCode
-              }
-              selectedOptions {
-                name
-                value
-              }
+            image {
+              url
+              altText
+            }
+            availableForSale
+            compareAtPrice {
+              amount
+              currencyCode
+            }
+            selectedOptions {
+              name
+              value
             }
           }
         }
       }
-      pageInfo {
-        hasNextPage
-        hasPreviousPage
-        startCursor
-        endCursor
-      }
+    }
+    pageInfo {
+      hasNextPage
+      hasPreviousPage
+      startCursor
+      endCursor
     }
   }
+}
 `;
 
 /**
