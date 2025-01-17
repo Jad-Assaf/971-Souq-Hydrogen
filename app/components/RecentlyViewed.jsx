@@ -21,7 +21,7 @@ export default function RecentlyViewedProducts({currentProductId}) {
       // Add the current product ID to the beginning of the array
       viewedProducts.unshift(currentProductId);
 
-      // Limit the array to the last 10 viewed products
+      // Limit the array to the last 20 viewed products
       viewedProducts = viewedProducts.slice(0, 20);
 
       // Save back to localStorage
@@ -42,6 +42,8 @@ export default function RecentlyViewedProducts({currentProductId}) {
       fetchProducts(productIds).then((fetchedProducts) => {
         setProducts(fetchedProducts);
       });
+    } else {
+      setProducts([]); // Ensure products state is empty if no product IDs
     }
   }, [currentProductId]);
 
@@ -119,36 +121,40 @@ export default function RecentlyViewedProducts({currentProductId}) {
     rowRef.current.scrollBy({left: distance, behavior: 'smooth'});
   };
 
-  if (products.length === 0) {
-    return null; // Don't render the component if there are no recently viewed products
-  }
+  // Removed the early return that hides the component when there are no products
 
   return (
     <div className="collection-section">
-      <div className="product-row-container">
-        <button className="home-prev-button" onClick={() => scrollRow(-600)}>
-          <LeftArrowIcon />
-        </button>
-        <div
-          className="collection-products-row"
-          ref={rowRef}
-          onMouseDown={handleMouseDown}
-          onMouseLeave={handleMouseLeave}
-          onMouseUp={handleMouseUp}
-          onMouseMove={handleMouseMove}
-        >
-          {products.map((product, index) => (
-            <RecentlyViewedProductItem
-              key={product.id}
-              product={product}
-              index={index}
-            />
-          ))}
+      {products.length === 0 ? (
+        <div className="no-recently-viewed">
+          <p>No Recently Viewed Products</p>
         </div>
-        <button className="home-next-button" onClick={() => scrollRow(600)}>
-          <RightArrowIcon />
-        </button>
-      </div>
+      ) : (
+        <div className="product-row-container">
+          <button className="home-prev-button" onClick={() => scrollRow(-600)}>
+            <LeftArrowIcon />
+          </button>
+          <div
+            className="collection-products-row"
+            ref={rowRef}
+            onMouseDown={handleMouseDown}
+            onMouseLeave={handleMouseLeave}
+            onMouseUp={handleMouseUp}
+            onMouseMove={handleMouseMove}
+          >
+            {products.map((product, index) => (
+              <RecentlyViewedProductItem
+                key={product.id}
+                product={product}
+                index={index}
+              />
+            ))}
+          </div>
+          <button className="home-next-button" onClick={() => scrollRow(600)}>
+            <RightArrowIcon />
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -186,8 +192,8 @@ function RecentlyViewedProductItem({product, index}) {
             aspectratio="1/1"
             sizes="(min-width: 45em) 20vw, 40vw"
             srcSet={`${product.featuredImage.url}?width=300&quality=30 300w,
-                                 ${product.featuredImage.url}?width=600&quality=30 600w,
-                                 ${product.featuredImage.url}?width=1200&quality=30 1200w`}
+                     ${product.featuredImage.url}?width=600&quality=30 600w,
+                     ${product.featuredImage.url}?width=1200&quality=30 1200w`}
             alt={product.featuredImage.altText || product.title}
             width="150px"
             height="150px"
