@@ -614,7 +614,7 @@ export default function Product() {
 
   useEffect(() => {
     setSelectedVariant(product.selectedVariant);
-    setQuantity(1); // If you want to reset quantity to 1 for new product
+    setQuantity(1); // Reset quantity to 1 when a new product is loaded
   }, [product]);
 
   const [quantity, setQuantity] = useState(1);
@@ -633,7 +633,7 @@ export default function Product() {
     }
   }, [quantity, selectedVariant]);
 
-  const {title, descriptionHtml, images} = product;
+  const {title, descriptionHtml} = product;
 
   const hasDiscount =
     selectedVariant?.compareAtPrice &&
@@ -654,7 +654,8 @@ export default function Product() {
             >
               <Money data={selectedVariant?.price} />
             </small>
-            {/* {hasDiscount && selectedVariant.compareAtPrice && (
+            {/* Uncomment below if you want to display the discounted price
+            {hasDiscount && selectedVariant.compareAtPrice && (
               <small className="discountedPrice">
                 <Money data={selectedVariant?.compareAtPrice} />
               </small>
