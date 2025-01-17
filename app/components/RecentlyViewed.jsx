@@ -125,6 +125,7 @@ export default function RecentlyViewedProducts({currentProductId}) {
 
   return (
     <div className="collection-section">
+      <h2>Recently Viewed Products</h2>
       {products.length === 0 ? (
         <div className="no-recently-viewed">
           <p>No Recently Viewed Products</p>
