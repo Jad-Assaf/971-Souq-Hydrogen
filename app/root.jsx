@@ -237,76 +237,69 @@ export function ErrorBoundary() {
     errorStatus,
   });
 
-  // Check for 404 status and render the specific 404 component
-  if (errorStatus === 404) {
-    return (
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          height: '70vh',
-          textAlign: 'center',
-          backgroundColor: '#f8f9fa',
-          color: '#333',
-          fontFamily: 'Arial, sans-serif',
-          padding: '20px',
-        }}
-      >
-        <h1
-          style={{
-            fontSize: '6rem',
-            fontWeight: 'bold',
-            margin: '0 0 10px',
-            color: '#232323',
-          }}
-        >
-          404
-        </h1>
-        <p
-          style={{
-            fontSize: '1.5rem',
-            marginBottom: '20px',
-          }}
-        >
-          The page you are looking for does not exist.
-        </p>
-        <a
-          href="/"
-          style={{
-            fontSize: '1rem',
-            color: '#232323',
-            textDecoration: 'none',
-            padding: '10px 20px',
-            border: '1px solid #232323',
-            borderRadius: '5px',
-            transition: 'background-color 0.3s, color 0.3s',
-          }}
-          onMouseEnter={(e) => {
-            e.target.style.backgroundColor = '#232323';
-            e.target.style.color = '#fff';
-          }}
-          onMouseLeave={(e) => {
-            e.target.style.backgroundColor = '#333';
-            e.target.style.color = '#232323';
-          }}
-        >
-          Go to Homepage
-        </a>
-      </div>
-    );
-  }
+  // Common error page styling
+  const containerStyle = {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: '70vh',
+    textAlign: 'center',
+    backgroundColor: '#f8f9fa',
+    color: '#333',
+    fontFamily: 'Arial, sans-serif',
+    padding: '20px',
+  };
 
-  // Generic error fallback for other error statuses
+  const titleStyle = {
+    fontSize: '6rem',
+    fontWeight: 'bold',
+    margin: '0 0 10px',
+    color: '#232323',
+  };
+
+  const messageStyle = {
+    fontSize: '1.5rem',
+    marginBottom: '20px',
+  };
+
+  const linkStyle = {
+    fontSize: '1rem',
+    color: '#232323',
+    textDecoration: 'none',
+    padding: '10px 20px',
+    border: '1px solid #232323',
+    borderRadius: '30px',
+    transition: 'background-color 0.3s, color 0.3s',
+  };
+
+  const handleMouseEnter = (e) => {
+    e.target.style.backgroundColor = '#232323';
+    e.target.style.color = '#fff';
+  };
+
+  const handleMouseLeave = (e) => {
+    e.target.style.backgroundColor = '#fff';
+    e.target.style.color = '#232323';
+  };
+
+  // Render the error page with appropriate status and message
   return (
-    <div className="error-container">
-      <h1>Error</h1>
-      <h2>Status: {errorStatus}</h2>
-      <p>{errorMessage}</p>
+    <div style={containerStyle}>
+      <h1 style={titleStyle}>{errorStatus}</h1>
+      <p style={messageStyle}>{errorMessage}</p>
+      <a
+        href="/"
+        style={linkStyle}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+      >
+        Go to Homepage
+      </a>
     </div>
   );
 }
+
 
 /** @typedef {LoaderReturnData} RootLoader */
 
