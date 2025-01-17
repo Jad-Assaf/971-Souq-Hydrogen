@@ -212,24 +212,10 @@ async function loadCriticalData({context, params, request}) {
   // Extract the first image
   const firstImage = product.images?.edges?.[0]?.node?.url || null;
 
-  // Fetch related products based on tags
-  const tags = product.tags; // Ensure this is an array of strings
-
-  // Construct a precise query string using tags
-  let queryString = '';
-
-  if (tags && tags.length > 0) {
-    const tagsQuery = tags.map((tag) => `tag:"${tag}"`).join(' OR ');
-    queryString = `(${tagsQuery}) AND NOT id:"${product.id}"`;
-  } else {
-    // Fallback if no tags are present, exclude current product
-    queryString = `NOT id:"${product.id}"`;
-  }
-
+  // Fetch related products
+  const productType = product.productType || 'General';
   const {products} = await storefront.query(RELATED_PRODUCTS_QUERY, {
-    variables: {
-      queryString,
-    },
+    variables: {productType},
   });
 
   const relatedProducts = products?.edges.map((edge) => edge.node) || [];
@@ -614,7 +600,7 @@ export default function Product() {
 
   useEffect(() => {
     setSelectedVariant(product.selectedVariant);
-    setQuantity(1); // Reset quantity to 1 when a new product is loaded
+    setQuantity(1); // If you want to reset quantity to 1 for new product
   }, [product]);
 
   const [quantity, setQuantity] = useState(1);
@@ -633,16 +619,11 @@ export default function Product() {
     }
   }, [quantity, selectedVariant]);
 
-  const {title, descriptionHtml} = product;
+  const {title, descriptionHtml, images} = product;
 
   const hasDiscount =
     selectedVariant?.compareAtPrice &&
     selectedVariant.price.amount !== selectedVariant.compareAtPrice.amount;
-
-  // Debugging: Log relatedProducts
-  useEffect(() => {
-    console.log('Related Products:', relatedProducts);
-  }, [relatedProducts]);
 
   return (
     <div className="product">
@@ -659,8 +640,7 @@ export default function Product() {
             >
               <Money data={selectedVariant?.price} />
             </small>
-            {/* Uncomment below if you want to display the discounted price
-            {hasDiscount && selectedVariant.compareAtPrice && (
+            {/* {hasDiscount && selectedVariant.compareAtPrice && (
               <small className="discountedPrice">
                 <Money data={selectedVariant?.compareAtPrice} />
               </small>
