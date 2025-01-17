@@ -111,6 +111,11 @@ export function Header({header, isLoggedIn, cart, publicStoreDomain}) {
               const [isOverlayVisible, setOverlayVisible] = useState(false);
               const [isSearchResultsVisible, setSearchResultsVisible] =
                 useState(false);
+              const searchContainerRef = useRef(null); // Ensure you have this ref defined
+
+              // Helper function to sanitize search term
+              const sanitizeSearchTerm = (term) =>
+                term.trim().replace(/\s+/g, '-');
 
               const handleFocus = () => {
                 if (window.innerWidth < 1024) {
@@ -147,9 +152,7 @@ export function Header({header, isLoggedIn, cart, publicStoreDomain}) {
 
               const handleSearch = () => {
                 if (inputRef.current) {
-                  const term = inputRef.current.value
-                    .trim()
-                    .replace(/\s+/g, '-');
+                  const term = sanitizeSearchTerm(inputRef.current.value);
                   if (term) {
                     window.location.href = `${SEARCH_ENDPOINT}?q=${term}`;
                   }
@@ -187,7 +190,9 @@ export function Header({header, isLoggedIn, cart, publicStoreDomain}) {
                         type="text"
                         placeholder="Search products"
                         onChange={(e) => {
-                          fetchResults(e);
+                          const sanitizedValue = e.target.value.trimStart(); // Optional: Remove leading spaces
+                          inputRef.current.value = sanitizedValue;
+                          fetchResults({target: {value: sanitizedValue}});
                           setSearchResultsVisible(true);
                         }}
                         onFocus={handleFocus}
@@ -204,16 +209,7 @@ export function Header({header, isLoggedIn, cart, publicStoreDomain}) {
                             fetchResults({target: {value: ''}}); // Reset search results
                           }}
                         >
-                          <svg
-                            fill="#000"
-                            height="12px"
-                            width="12px"
-                            version="1.1"
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 460.775 460.775"
-                          >
-                            <path d="M285.08,230.397L456.218,59.27c6.076-6.077,6.076-15.911,0-21.986L423.511,4.565c-2.913-2.911-6.866-4.55-10.992-4.55 c-4.127,0-8.08,1.639-10.993,4.55l-171.138,171.14L59.25,4.565c-2.913-2.911-6.866-4.55-10.993-4.55 c-4.126,0-8.08,1.639-10.992,4.55L4.558,37.284c-6.077,6.075-6.077,15.909,0,21.986l171.138,171.128L4.575,401.505 c-6.074,6.077-6.074,15.911,0,21.986l32.709,32.719c2.911,2.911,6.865,4.55,10.992,4.55c4.127,0,8.08-1.639,10.994-4.55 l171.117-171.12l171.118,171.12c2.913,2.911,6.866,4.55,10.993,4.55c4.128,0,8.081-1.639,10.992-4.55l32.709-32.719 c6.074-6.075,6.074-15.909,0-21.986L285.08,230.397z"></path>
-                          </svg>
+                          {/* SVG Icon */}
                         </button>
                       )}
                       <button
@@ -251,15 +247,14 @@ export function Header({header, isLoggedIn, cart, publicStoreDomain}) {
                                       closeSearch();
                                       handleCloseSearch();
                                     }}
-                                    to={`${SEARCH_ENDPOINT}?q=${term.current.replace(
-                                      /\s+/g,
-                                      '-',
+                                    to={`${SEARCH_ENDPOINT}?q=${sanitizeSearchTerm(
+                                      term.current,
                                     )}`}
                                     className="view-all-results"
                                   >
                                     <p>
-                                      View all results for <q>{term.current}</q>{' '}
-                                      &nbsp; →
+                                      View all results for{' '}
+                                      <q>{term.current.trim()}</q> &nbsp; →
                                     </p>
                                   </Link>
                                 ) : null}
