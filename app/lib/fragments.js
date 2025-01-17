@@ -264,7 +264,7 @@ export const FOOTER_QUERY = `#graphql
   }
 `;
 
-export const RELATED_PRODUCTS_QUERY = `#graphql
+export const RELATED_PRODUCTS_QUERY = `# graphql
   query RelatedProducts(
     $queryString: String!, 
     $country: CountryCode, 

@@ -639,6 +639,11 @@ export default function Product() {
     selectedVariant?.compareAtPrice &&
     selectedVariant.price.amount !== selectedVariant.compareAtPrice.amount;
 
+  // Debugging: Log relatedProducts
+  useEffect(() => {
+    console.log('Related Products:', relatedProducts);
+  }, [relatedProducts]);
+
   return (
     <div className="product">
       <div className="ProductPageTop">
