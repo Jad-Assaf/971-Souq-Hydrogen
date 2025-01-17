@@ -240,10 +240,60 @@ export function ErrorBoundary() {
   // Check for 404 status and render the specific 404 component
   if (errorStatus === 404) {
     return (
-      <div className="error-404">
-        <h1>Page Not Found</h1>
-        <p>The page you are looking for does not exist.</p>
-        <a href="/" className="go-home-link">Go to Homepage</a>
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          height: '100vh',
+          textAlign: 'center',
+          backgroundColor: '#f8f9fa',
+          color: '#333',
+          fontFamily: 'Arial, sans-serif',
+          padding: '20px',
+        }}
+      >
+        <h1
+          style={{
+            fontSize: '6rem',
+            fontWeight: 'bold',
+            margin: '0 0 10px',
+            color: '#ff6b6b',
+          }}
+        >
+          404
+        </h1>
+        <p
+          style={{
+            fontSize: '1.5rem',
+            marginBottom: '20px',
+          }}
+        >
+          The page you are looking for does not exist.
+        </p>
+        <a
+          href="/"
+          style={{
+            fontSize: '1rem',
+            color: '#007bff',
+            textDecoration: 'none',
+            padding: '10px 20px',
+            border: '1px solid #007bff',
+            borderRadius: '5px',
+            transition: 'background-color 0.3s, color 0.3s',
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.backgroundColor = '#007bff';
+            e.target.style.color = '#fff';
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.backgroundColor = 'transparent';
+            e.target.style.color = '#007bff';
+          }}
+        >
+          Go to Homepage
+        </a>
       </div>
     );
   }
