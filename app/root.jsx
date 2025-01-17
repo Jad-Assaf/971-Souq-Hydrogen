@@ -246,7 +246,7 @@ export function ErrorBoundary() {
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          height: '100vh',
+          height: '70vh',
           textAlign: 'center',
           backgroundColor: '#f8f9fa',
           color: '#333',
@@ -259,7 +259,7 @@ export function ErrorBoundary() {
             fontSize: '6rem',
             fontWeight: 'bold',
             margin: '0 0 10px',
-            color: '#ff6b6b',
+            color: '#232323',
           }}
         >
           404
@@ -276,20 +276,20 @@ export function ErrorBoundary() {
           href="/"
           style={{
             fontSize: '1rem',
-            color: '#007bff',
+            color: '#232323',
             textDecoration: 'none',
             padding: '10px 20px',
-            border: '1px solid #007bff',
+            border: '1px solid #232323',
             borderRadius: '5px',
             transition: 'background-color 0.3s, color 0.3s',
           }}
           onMouseEnter={(e) => {
-            e.target.style.backgroundColor = '#007bff';
+            e.target.style.backgroundColor = '#232323';
             e.target.style.color = '#fff';
           }}
           onMouseLeave={(e) => {
-            e.target.style.backgroundColor = 'transparent';
-            e.target.style.color = '#007bff';
+            e.target.style.backgroundColor = '#333';
+            e.target.style.color = '#232323';
           }}
         >
           Go to Homepage
