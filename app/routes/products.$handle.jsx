@@ -212,13 +212,43 @@ async function loadCriticalData({context, params, request}) {
   // Extract the first image
   const firstImage = product.images?.edges?.[0]?.node?.url || null;
 
-  // Fetch related products
-  const productType = product.productType || 'General';
-  const {products} = await storefront.query(RELATED_PRODUCTS_QUERY, {
-    variables: {productType},
-  });
+  // Extract product tags
+  const tags = product.tags || [];
 
-  const relatedProducts = products?.edges.map((edge) => edge.node) || [];
+  // Initialize relatedProducts
+  let relatedProducts = [];
+
+  if (tags.length > 0) {
+    // Limit the number of tags to avoid overly complex queries
+    const MAX_TAGS = 5; // Adjust as needed
+    const limitedTags = tags.slice(0, MAX_TAGS);
+
+    // Construct tag filters (e.g., tag:"Tag1" OR tag:"Tag2")
+    const tagFilters = limitedTags.map((tag) => `tag:"${tag}"`).join(' OR ');
+
+    // Exclude the current product by its global ID
+    const excludeCurrentProduct = `-id:${product.id}`;
+
+    // Combine tag filters and exclusion
+    const searchQuery = `(${tagFilters}) AND (${excludeCurrentProduct})`;
+
+    // Fetch related products based on tags
+    const {products} = await storefront.query(RELATED_PRODUCTS_QUERY, {
+      variables: {query: searchQuery},
+    });
+
+    relatedProducts = products?.edges.map((edge) => edge.node) || [];
+  } else if (product.productType) {
+    // Fallback to productType if no tags are present
+    const productType = product.productType || 'General';
+    const searchQuery = `product_type:"${productType}" AND -id:${product.id}`;
+
+    const {products} = await storefront.query(RELATED_PRODUCTS_QUERY, {
+      variables: {query: searchQuery},
+    });
+
+    relatedProducts = products?.edges.map((edge) => edge.node) || [];
+  }
 
   // Return necessary product data including SEO, first image, and variant price
   return {
@@ -887,9 +917,11 @@ export default function Product() {
         />
       </div>
       <div className="related-products-row">
-        <div className="related-products">
-          <RelatedProductsRow products={relatedProducts || []} />
-        </div>
+        {relatedProducts.length > 0 ? (
+          <RelatedProductsRow products={relatedProducts} />
+        ) : (
+          <p>No related products found.</p>
+        )}
       </div>
       <div className="recently-viewed-container">
         <RecentlyViewedProducts currentProductId={product.id} />

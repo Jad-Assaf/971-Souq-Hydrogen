@@ -265,14 +265,15 @@ export const FOOTER_QUERY = `#graphql
 `;
 
 export const RELATED_PRODUCTS_QUERY = `#graphql
-  query RelatedProducts($productType: String!, $country: CountryCode, $language: LanguageCode) 
+  query RelatedProducts($query: String!, $country: CountryCode, $language: LanguageCode) 
   @inContext(country: $country, language: $language) {
-    products(first: 20, query: $productType) {
+    products(first: 20, query: $query) {
       edges {
         node {
           id
           title
           handle
+          tags
           images(first: 1) {
             edges {
               node {
