@@ -1561,6 +1561,7 @@ input.search-bar:focus-visible {
   padding: 20px 24px 0 24px;
   max-height: 750px;
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .predictive-search-result h5 {
