@@ -95,21 +95,27 @@ export async function loader({request, context}) {
   const minPrice = searchParams.get('minPrice');
   const maxPrice = searchParams.get('maxPrice');
 
-  // Process the search term to include wildcards
+  // Process the search term to include wildcards and specify fields
   const terms = rawTerm
     .split(/\s+/)
     .map((word) => word.trim())
     .filter(Boolean)
     .map((word) => `*${word}*`); // Add wildcards to each term
 
-  const termWithWildcards = terms.join(' AND '); // Combine with AND for multiple terms
+  // Construct field-specific search clauses
+  const fieldSpecificTerms = terms
+    .map(
+      (word) =>
+        `(title:${word} OR description:${word} OR variants.sku:${word})`,
+    )
+    .join(' AND '); // Combine with AND for multiple terms
 
-  // Now, use 'termWithWildcards' instead of 'term' in the filterQuery
-  let filterQuery = termWithWildcards;
+  // Now, use 'fieldSpecificTerms' instead of 'termWithWildcards' in the filterQuery
+  let filterQuery = fieldSpecificTerms;
 
   if (filterQueryParts.length > 0) {
     if (filterQuery) {
-      // e.g. "*XM5* AND (vendor:"Nike" OR vendor:"Adidas")"
+      // e.g. "(title:*XM5* OR description:*XM5* OR variants.sku:*XM5*) AND (vendor:"Nike" OR vendor:"Adidas")"
       filterQuery += ' AND ' + filterQueryParts.join(' AND ');
     } else {
       filterQuery = filterQueryParts.join(' AND ');
@@ -749,7 +755,7 @@ async function regularSearch({
   after = null,
   before = null,
 }) {
-  const {storefront} = context;
+  const { storefront } = context;
 
   let first = null;
   let last = null;
@@ -773,7 +779,7 @@ async function regularSearch({
   };
 
   try {
-    const {products} = await storefront.query(FILTERED_PRODUCTS_QUERY, {
+    const { products } = await storefront.query(FILTERED_PRODUCTS_QUERY, {
       variables,
     });
 
@@ -781,14 +787,14 @@ async function regularSearch({
       return {
         type: 'regular',
         term: filterQuery,
-        result: {products: {edges: []}},
+        result: { products: { edges: [] } },
       };
     }
 
     return {
       type: 'regular',
       term: filterQuery,
-      result: {products},
+      result: { products },
     };
   } catch (error) {
     console.error('Regular search error:', error);
