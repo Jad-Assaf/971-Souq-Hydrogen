@@ -433,8 +433,3 @@ strong {
 .collection-products-row {
     gap: 5px !important;
 }
-
-.collection-section {
-    min-height: 400px !important;
-    max-height: 434px !important;
-}
