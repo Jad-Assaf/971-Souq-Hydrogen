@@ -176,18 +176,16 @@ export async function loader(args) {
   return defer({...deferredData, ...criticalData});
 }
 
-// In your loader function
-
-async function loadCriticalData({ context, params, request }) {
-  const { handle } = params;
-  const { storefront } = context;
+async function loadCriticalData({context, params, request}) {
+  const {handle} = params;
+  const {storefront} = context;
 
   if (!handle) {
     throw new Error('Expected product handle to be defined');
   }
 
   // Fetch product data
-  const { product } = await storefront.query(PRODUCT_QUERY, {
+  const {product} = await storefront.query(PRODUCT_QUERY, {
     variables: {
       handle,
       selectedOptions: getSelectedProductOptions(request) || [],
@@ -195,7 +193,7 @@ async function loadCriticalData({ context, params, request }) {
   });
 
   if (!product) {
-    throw new Response('Product not found', { status: 404 });
+    throw new Response('Product not found', {status: 404});
   }
 
   // Select the first variant as the default if applicable
@@ -214,22 +212,22 @@ async function loadCriticalData({ context, params, request }) {
   // Extract the first image
   const firstImage = product.images?.edges?.[0]?.node?.url || null;
 
-  // Fetch related products
-  const productType = product.productType || 'General';
+  // Fetch related products based on tags
   const tags = product.tags; // Ensure this is an array of strings
 
-  // Construct a precise query string
-  let queryString = `product_type:"${productType}" AND NOT id:"${product.id}"`;
+  // Construct a precise query string using tags
+  let queryString = '';
 
   if (tags && tags.length > 0) {
-    const tagsQuery = tags.map(tag => `tag:"${tag}"`).join(' OR ');
-    queryString += ` AND (${tagsQuery})`;
+    const tagsQuery = tags.map((tag) => `tag:"${tag}"`).join(' OR ');
+    queryString = `(${tagsQuery}) AND NOT id:"${product.id}"`;
+  } else {
+    // Fallback if no tags are present, exclude current product
+    queryString = `NOT id:"${product.id}"`;
   }
 
-  const { products } = await storefront.query(RELATED_PRODUCTS_QUERY, {
-    variables: { 
-      productType, 
-      currentProductId: product.id,
+  const {products} = await storefront.query(RELATED_PRODUCTS_QUERY, {
+    variables: {
       queryString,
     },
   });

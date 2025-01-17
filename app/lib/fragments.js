@@ -266,9 +266,7 @@ export const FOOTER_QUERY = `#graphql
 
 export const RELATED_PRODUCTS_QUERY = `#graphql
   query RelatedProducts(
-    $productType: String!, 
-    $currentProductId: ID!,
-    $queryString: String!,
+    $queryString: String!, 
     $country: CountryCode, 
     $language: LanguageCode
   ) 
@@ -322,7 +320,6 @@ export const RELATED_PRODUCTS_QUERY = `#graphql
     }
   }
 `;
-
 
 export const RECENTLY_VIEWED_PRODUCTS_QUERY = `#graphql
   query RecentlyViewedProducts($handles: [String!]!) {
