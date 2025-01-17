@@ -559,6 +559,10 @@ button {
   width: 100%;
 }
 
+.recently-viewed-containe .collection-section{
+  min-height: unset;
+}
+
 .recently-viewed-container .product-item {
   display: flex;
   justify-content: center;
