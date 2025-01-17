@@ -559,8 +559,8 @@ button {
   width: 100%;
 }
 
-.recently-viewed-containe .collection-section{
-  min-height: unset;
+.recently-viewed-container .collection-section{
+  min-height: unset !important;
 }
 
 .recently-viewed-container .product-item {
