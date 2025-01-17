@@ -158,9 +158,7 @@ export const meta = ({data}) => {
             '@type': 'ListItem',
             position: 2,
             name: collection?.title || 'Collection',
-            item: `https://971souq.ae/collections/${
-              collection?.handle || ''
-            }`,
+            item: `https://971souq.ae/collections/${collection?.handle || ''}`,
           },
         ],
       },
@@ -210,7 +208,27 @@ export async function loadCriticalData({context, params, request}) {
   const {handle} = params;
   const {storefront} = context;
   const searchParams = new URL(request.url).searchParams;
-  const paginationVariables = getPaginationVariables(request, {pageBy: 20});
+
+  // Extract the 'page' query parameter, default to 1 if not present
+  const page = parseInt(searchParams.get('page') || '1', 10);
+  const pageSize = 20; // Items per page
+
+  // Calculate 'first' and 'after' based on the current page
+  let first = pageSize;
+  let after = null;
+
+  if (page > 1) {
+    // To get the cursor for the current page, you might need to fetch the previous pages
+    // This is a simplified approach; in a real-world scenario, you'd store cursors
+    // or use another method to map pages to cursors.
+    // Here, we'll assume 'getPaginationVariables' handles it.
+    const paginationVariables = getPaginationVariables(request, {
+      pageBy: pageSize,
+      page,
+    });
+    first = paginationVariables.first;
+    after = paginationVariables.after;
+  }
 
   // Set default sort to 'newest' if no sort parameter is provided
   const sort = searchParams.get('sort') || 'newest';
@@ -253,15 +271,15 @@ export async function loadCriticalData({context, params, request}) {
   }
 
   try {
-    // Fetch main collection
+    // Fetch main collection with pagination
     const {collection} = await storefront.query(COLLECTION_QUERY, {
       variables: {
         handle,
-        first: 20,
+        first,
+        after,
         filters: filters.length ? filters : undefined,
         sortKey,
         reverse,
-        ...paginationVariables,
       },
     });
 
@@ -335,6 +353,9 @@ export async function loadCriticalData({context, params, request}) {
           collection?.seo?.description || collection.description || '',
         image: collection?.image?.url || null,
       },
+      currentPage: page,
+      hasNextPage: collection.products.pageInfo.hasNextPage,
+      hasPreviousPage: collection.products.pageInfo.hasPreviousPage,
     };
   } catch (error) {
     console.error('Error fetching collection:', error);
@@ -362,7 +383,14 @@ function loadDeferredData({context}) {
 }
 
 export default function Collection() {
-  const {collection, appliedFilters, sliderCollections} = useLoaderData();
+  const {
+    collection,
+    appliedFilters,
+    sliderCollections,
+    currentPage,
+    hasNextPage,
+    hasPreviousPage,
+  } = useLoaderData();
   const [userSelectedNumberInRow, setUserSelectedNumberInRow] = useState(null); // Tracks user selection
 
   const calculateNumberInRow = (width, userSelection) => {
@@ -458,7 +486,15 @@ export default function Collection() {
       window.history.replaceState({}, '', cleanUrl);
     }
   }, []);
-  
+
+  // Calculate total pages if possible (requires total product count)
+  // Assuming you have totalCount available, which is not present in your current query
+  // If not, you might need to adjust your GraphQL query to fetch totalCount
+  const totalCount = collection?.products?.pageInfo?.hasNextPage
+    ? currentPage + 1
+    : currentPage;
+  const totalPages = hasNextPage ? currentPage + 1 : currentPage;
+
   return (
     <div className="collection">
       <h1>{collection.title}</h1>
@@ -479,8 +515,8 @@ export default function Collection() {
                         sizes="(min-width: 45em) 20vw, 40vw"
                         src={`${sliderCollection.image.url}?width=600&quality=7`}
                         srcSet={`${sliderCollection.image.url}?width=300&quality=7 300w,
-                                     ${sliderCollection.image.url}?width=600&quality=7 600w,
-                                     ${sliderCollection.image.url}?width=1200&quality=7 1200w`}
+                                 ${sliderCollection.image.url}?width=600&quality=7 600w,
+                                 ${sliderCollection.image.url}?width=1200&quality=7 1200w`}
                         alt={
                           sliderCollection.image.altText ||
                           sliderCollection.title
@@ -983,6 +1019,59 @@ export default function Collection() {
               />
             )}
           </PaginatedResourceSection>
+
+          {/* Pagination Controls */}
+          <div className="pagination-controls">
+            <button
+              onClick={() => {
+                if (hasPreviousPage) {
+                  const newPage = currentPage - 1;
+                  const params = new URLSearchParams(searchParams.toString());
+                  params.set('page', newPage);
+                  navigate(`?${params.toString()}`);
+                }
+              }}
+              disabled={!hasPreviousPage}
+              className="pagination-button"
+            >
+              Previous
+            </button>
+
+            {/* Page Numbers */}
+            <div className="page-numbers">
+              {/* Assuming a maximum of 5 page numbers to display */}
+              {Array.from({length: 5}, (_, i) => i + 1).map((pageNumber) => (
+                <button
+                  key={pageNumber}
+                  onClick={() => {
+                    const params = new URLSearchParams(searchParams.toString());
+                    params.set('page', pageNumber);
+                    navigate(`?${params.toString()}`);
+                  }}
+                  className={`page-number ${
+                    currentPage === pageNumber ? 'active' : ''
+                  }`}
+                >
+                  {pageNumber}
+                </button>
+              ))}
+            </div>
+
+            <button
+              onClick={() => {
+                if (hasNextPage) {
+                  const newPage = currentPage + 1;
+                  const params = new URLSearchParams(searchParams.toString());
+                  params.set('page', newPage);
+                  navigate(`?${params.toString()}`);
+                }
+              }}
+              disabled={!hasNextPage}
+              className="pagination-button"
+            >
+              Next
+            </button>
+          </div>
         </div>
       </div>
 
