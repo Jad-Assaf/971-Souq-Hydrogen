@@ -176,16 +176,18 @@ export async function loader(args) {
   return defer({...deferredData, ...criticalData});
 }
 
-async function loadCriticalData({context, params, request}) {
-  const {handle} = params;
-  const {storefront} = context;
+// In your loader function
+
+async function loadCriticalData({ context, params, request }) {
+  const { handle } = params;
+  const { storefront } = context;
 
   if (!handle) {
     throw new Error('Expected product handle to be defined');
   }
 
   // Fetch product data
-  const {product} = await storefront.query(PRODUCT_QUERY, {
+  const { product } = await storefront.query(PRODUCT_QUERY, {
     variables: {
       handle,
       selectedOptions: getSelectedProductOptions(request) || [],
@@ -193,7 +195,7 @@ async function loadCriticalData({context, params, request}) {
   });
 
   if (!product) {
-    throw new Response('Product not found', {status: 404});
+    throw new Response('Product not found', { status: 404 });
   }
 
   // Select the first variant as the default if applicable
@@ -214,8 +216,22 @@ async function loadCriticalData({context, params, request}) {
 
   // Fetch related products
   const productType = product.productType || 'General';
-  const {products} = await storefront.query(RELATED_PRODUCTS_QUERY, {
-    variables: {productType},
+  const tags = product.tags; // Ensure this is an array of strings
+
+  // Construct a precise query string
+  let queryString = `product_type:"${productType}" AND NOT id:"${product.id}"`;
+
+  if (tags && tags.length > 0) {
+    const tagsQuery = tags.map(tag => `tag:"${tag}"`).join(' OR ');
+    queryString += ` AND (${tagsQuery})`;
+  }
+
+  const { products } = await storefront.query(RELATED_PRODUCTS_QUERY, {
+    variables: { 
+      productType, 
+      currentProductId: product.id,
+      queryString,
+    },
   });
 
   const relatedProducts = products?.edges.map((edge) => edge.node) || [];

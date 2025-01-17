@@ -265,9 +265,15 @@ export const FOOTER_QUERY = `#graphql
 `;
 
 export const RELATED_PRODUCTS_QUERY = `#graphql
-  query RelatedProducts($productType: String!, $country: CountryCode, $language: LanguageCode) 
+  query RelatedProducts(
+    $productType: String!, 
+    $currentProductId: ID!,
+    $queryString: String!,
+    $country: CountryCode, 
+    $language: LanguageCode
+  ) 
   @inContext(country: $country, language: $language) {
-    products(first: 20, query: $productType) {
+    products(first: 20, query: $queryString) {
       edges {
         node {
           id
@@ -316,6 +322,7 @@ export const RELATED_PRODUCTS_QUERY = `#graphql
     }
   }
 `;
+
 
 export const RECENTLY_VIEWED_PRODUCTS_QUERY = `#graphql
   query RecentlyViewedProducts($handles: [String!]!) {
