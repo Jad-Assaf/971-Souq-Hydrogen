@@ -15,7 +15,6 @@ import {
   getSeoMeta,
 } from '@shopify/hydrogen';
 import {useVariantUrl} from '~/lib/variants';
-import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
 import {DrawerFilter} from '~/modules/drawer-filter';
 import {FILTER_URL_PREFIX} from '~/lib/const';
 import React, {useEffect, useRef, useState} from 'react';
@@ -342,6 +341,10 @@ export async function loadCriticalData({context, params, request}) {
       }
     });
 
+    // Calculate total pages
+    const totalCount = collection.products.totalCount;
+    const totalPages = Math.ceil(totalCount / pageSize);
+
     // Extend return object with SEO and image data
     return {
       collection,
@@ -354,6 +357,7 @@ export async function loadCriticalData({context, params, request}) {
         image: collection?.image?.url || null,
       },
       currentPage: page,
+      totalPages,
       hasNextPage: collection.products.pageInfo.hasNextPage,
       hasPreviousPage: collection.products.pageInfo.hasPreviousPage,
     };
@@ -388,6 +392,7 @@ export default function Collection() {
     appliedFilters,
     sliderCollections,
     currentPage,
+    totalPages,
     hasNextPage,
     hasPreviousPage,
   } = useLoaderData();
@@ -486,14 +491,6 @@ export default function Collection() {
       window.history.replaceState({}, '', cleanUrl);
     }
   }, []);
-
-  // Calculate total pages if possible (requires total product count)
-  // Assuming you have totalCount available, which is not present in your current query
-  // If not, you might need to adjust your GraphQL query to fetch totalCount
-  const totalCount = collection?.products?.pageInfo?.hasNextPage
-    ? currentPage + 1
-    : currentPage;
-  const totalPages = hasNextPage ? currentPage + 1 : currentPage;
 
   return (
     <div className="collection">
@@ -1002,36 +999,30 @@ export default function Collection() {
             />
           </div>
 
-          <PaginatedResourceSection
-            key={`products-grid-${numberInRow}`} // Forces re-render on change
-            connection={{
-              ...collection.products,
-              nodes: sortedProducts,
-            }}
-            resourcesClassName={`products-grid grid-cols-${numberInRow}`} // Dynamic class
-          >
-            {({node: product, index}) => (
+          {/* Product Grid */}
+          <div className={`products-grid grid-cols-${numberInRow}`}>
+            {sortedProducts.map((product, index) => (
               <ProductItem
                 key={product.id}
                 product={product}
                 index={index}
                 numberInRow={numberInRow}
               />
-            )}
-          </PaginatedResourceSection>
+            ))}
+          </div>
 
           {/* Pagination Controls */}
           <div className="pagination-controls">
             <button
               onClick={() => {
-                if (hasPreviousPage) {
+                if (hasPreviousPage && currentPage > 1) {
                   const newPage = currentPage - 1;
                   const params = new URLSearchParams(searchParams.toString());
                   params.set('page', newPage);
                   navigate(`?${params.toString()}`);
                 }
               }}
-              disabled={!hasPreviousPage}
+              disabled={!hasPreviousPage || currentPage === 1}
               className="pagination-button"
             >
               Previous
@@ -1039,22 +1030,25 @@ export default function Collection() {
 
             {/* Page Numbers */}
             <div className="page-numbers">
-              {/* Assuming a maximum of 5 page numbers to display */}
-              {Array.from({length: 5}, (_, i) => i + 1).map((pageNumber) => (
-                <button
-                  key={pageNumber}
-                  onClick={() => {
-                    const params = new URLSearchParams(searchParams.toString());
-                    params.set('page', pageNumber);
-                    navigate(`?${params.toString()}`);
-                  }}
-                  className={`page-number ${
-                    currentPage === pageNumber ? 'active' : ''
-                  }`}
-                >
-                  {pageNumber}
-                </button>
-              ))}
+              {Array.from({length: totalPages}, (_, i) => i + 1).map(
+                (pageNumber) => (
+                  <button
+                    key={pageNumber}
+                    onClick={() => {
+                      const params = new URLSearchParams(
+                        searchParams.toString(),
+                      );
+                      params.set('page', pageNumber);
+                      navigate(`?${params.toString()}`);
+                    }}
+                    className={`page-number ${
+                      currentPage === pageNumber ? 'active' : ''
+                    }`}
+                  >
+                    {pageNumber}
+                  </button>
+                ),
+              )}
             </div>
 
             <button
@@ -1344,9 +1338,7 @@ const COLLECTION_QUERY = `#graphql
     $sortKey: ProductCollectionSortKeys
     $reverse: Boolean
     $first: Int
-    $last: Int
-    $startCursor: String
-    $endCursor: String
+    $after: String
   ) {
     collection(handle: $handle) {
       id
@@ -1363,13 +1355,12 @@ const COLLECTION_QUERY = `#graphql
       }
       products(
         first: $first,
-        last: $last,
-        before: $startCursor,
-        after: $endCursor,
+        after: $after,
         filters: $filters,
         sortKey: $sortKey,
         reverse: $reverse
       ) {
+        totalCount
         filters {
           id
           label
