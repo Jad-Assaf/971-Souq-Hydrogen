@@ -43,6 +43,7 @@ export default async function handleRequest(
       'https://971souq.myshopify.com',
       'https://cdn.shopify.com', // Allow scripts from Shopify CDN
       'https://connect.facebook.net', // Required for Meta Pixel
+      'https://google.com',
       'https://www.google.com',
       'https://www.googletagmanager.com',
       'https://www.googletagmanager.com/',
@@ -60,6 +61,7 @@ export default async function handleRequest(
       'https://971souq.myshopify.com',
       'https://cdn.shopify.com', // Allow scripts from Shopify CDN
       'https://connect.facebook.net', // Required for Meta Pixel
+      'https://google.com',
       'https://www.google.com',
       'https://www.googletagmanager.com',
       'https://www.googletagmanager.com/',
@@ -77,6 +79,7 @@ export default async function handleRequest(
       'https://971souq.myshopify.com',
       'https://cdn.shopify.com', // Allow scripts from Shopify CDN
       'https://connect.facebook.net', // Required for Meta Pixel
+      'https://google.com',
       'https://www.google.com',
       'https://www.googletagmanager.com',
       'https://www.googletagmanager.com/',
@@ -94,6 +97,7 @@ export default async function handleRequest(
       'https://971souq.myshopify.com',
       'https://cdn.shopify.com', // Allow scripts from Shopify CDN
       'https://connect.facebook.net', // Required for Meta Pixel
+      'https://google.com',
       'https://www.google.com',
       'https://www.googletagmanager.com',
       'https://www.googletagmanager.com/',
