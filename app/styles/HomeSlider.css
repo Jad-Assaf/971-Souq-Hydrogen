@@ -7,6 +7,7 @@
     border-radius: 20px;
     margin: 20px auto;
     max-width: 1500px;
+    overflow: auto;
 }
 
 .cat-h3 {
@@ -25,8 +26,6 @@
     scrollbar-width: none;
     scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
-    width: 100%;
-    max-width: 1500px;
     margin: auto;
     gap: 20px;
 }
@@ -38,10 +37,7 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    /* background: white;
-    border-radius: 60%;
-    width: 130px;
-    height: 130px; */
+    width: 120px;
 }
 
 .category-title {
@@ -62,6 +58,10 @@
         margin: auto;
         justify-content: space-evenly;
         gap: 15px !important;
+    }
+
+    .category-container {
+        width: 30%;
     }
 }
 
