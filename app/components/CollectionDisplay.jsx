@@ -30,6 +30,21 @@ export function ProductRow({products}) {
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
+  const [hasOverflow, setHasOverflow] = useState(false);
+
+  useEffect(() => {
+    const checkOverflow = () => {
+      if (rowRef.current) {
+        setHasOverflow(rowRef.current.scrollWidth > rowRef.current.clientWidth);
+      }
+    };
+    checkOverflow();
+    window.addEventListener('resize', checkOverflow);
+
+    return () => {
+      window.removeEventListener('resize', checkOverflow);
+    };
+  }, [products]);
 
   const handleMouseDown = (e) => {
     setIsDragging(true);
@@ -54,7 +69,7 @@ export function ProductRow({products}) {
 
   return (
     <>
-      {products.length > 0 && (
+      {products.length > 0 && hasOverflow && (
         <button className="home-prev-button" onClick={() => scrollRow(-600)}>
           <LeftArrowIcon />
         </button>
@@ -75,7 +90,7 @@ export function ProductRow({products}) {
           <p>No products available.</p>
         )}
       </div>
-      {products.length > 0 && (
+      {products.length > 0 && hasOverflow && (
         <button className="home-next-button" onClick={() => scrollRow(600)}>
           <RightArrowIcon />
         </button>
