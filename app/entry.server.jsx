@@ -66,6 +66,22 @@ export default async function handleRequest(
       'https://analytics.google.com/',
       'https://td.doubleclick.net/',
     ],
+    frameSrc: [
+      "'self'", // Allow scripts from the same origin
+      'https://www.clarity.ms', // Allow scripts from clarity.ms
+      'https://*.clarity.ms', // Allow scripts from clarity.ms
+      'https://x.clarity.ms',
+      'https://971souq.ae',
+      'https://971souq.myshopify.com',
+      'https://cdn.shopify.com', // Allow scripts from Shopify CDN
+      'https://connect.facebook.net', // Required for Meta Pixel
+      'https://www.google.com',
+      'https://www.googletagmanager.com',
+      'https://www.googletagmanager.com/',
+      'https://www.google.com/*/',
+      'https://analytics.google.com/',
+      'https://td.doubleclick.net/',
+    ],
     imgSrc: [
       "'self'", // Allow scripts from the same origin
       'https://www.clarity.ms', // Allow scripts from clarity.ms
