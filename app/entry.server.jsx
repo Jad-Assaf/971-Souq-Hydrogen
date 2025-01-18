@@ -43,6 +43,8 @@ export default async function handleRequest(
       'https://971souq.myshopify.com',
       'https://cdn.shopify.com', // Allow scripts from Shopify CDN
       'https://connect.facebook.net', // Required for Meta Pixel
+      'https://www.google.com',
+      'https://www.googletagmanager.com',
     ],
     connectSrc: [
       "'self'", // Allow connections to the same origin
@@ -52,6 +54,8 @@ export default async function handleRequest(
       'https://971souq.myshopify.com',
       'https://monorail-edge.shopifysvc.com', // Allow Shopify service connections
       'https://connect.facebook.net', // Required for Meta Pixel
+      'https://www.google.com',
+      'https://www.googletagmanager.com',
     ],
     imgSrc: [
       "'self'",
@@ -63,6 +67,8 @@ export default async function handleRequest(
       'https://971souq.ae',
       'https://971souq.myshopify.com',
       'https://www.facebook.com', // if you need the FB Pixel 1x1
+      'https://www.google.com',
+      'https://www.googletagmanager.com',
       // etc.
     ],
   });
