@@ -1,5 +1,5 @@
 import {Link} from '@remix-run/react';
-import React, {useRef, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 
 // Reusable Component for CollectionItem
 const CollectionItem = ({collection, index}) => {
@@ -1071,6 +1071,23 @@ export const homeAppliancesMenu = [
 
 export const CollectionCircles = ({collections}) => {
   const sliderRef = useRef(null); // Reference for the slider container
+  const [hasOverflow, setHasOverflow] = useState(false);
+
+  useEffect(() => {
+    const checkOverflow = () => {
+      if (sliderRef.current) {
+        setHasOverflow(
+          sliderRef.current.scrollWidth > sliderRef.current.clientWidth,
+        );
+      }
+    };
+    checkOverflow();
+    window.addEventListener('resize', checkOverflow);
+
+    return () => {
+      window.removeEventListener('resize', checkOverflow);
+    };
+  }, [collections]);
 
   const scrollSlider = (distance) => {
     if (sliderRef.current) {
@@ -1081,46 +1098,54 @@ export const CollectionCircles = ({collections}) => {
   return (
     <div className="menu-slider-container" style={{position: 'relative'}}>
       {/* Previous Button */}
-      <button
-        className="circle-prev-button"
-        onClick={() => scrollSlider(-600)}
-        style={{
-          position: 'absolute',
-          top: '50%',
-          left: '0',
-          transform: 'translateY(-50%)',
-        }}
-      >
-        <CustomLeftArrow />
-      </button>
+      {collections.length > 0 && hasOverflow && (
+        <button
+          className="circle-prev-button"
+          onClick={() => scrollSlider(-600)}
+          style={{
+            position: 'absolute',
+            top: '50%',
+            left: '0',
+            transform: 'translateY(-50%)',
+          }}
+        >
+          <CustomLeftArrow />
+        </button>
+      )}
 
       <div
         className="animated-menu-item"
         ref={sliderRef}
         style={{overflowX: 'auto', display: 'flex'}}
       >
-        {collections.map((collection, collectionIndex) => (
-          <CollectionItem
-            collection={collection}
-            index={collectionIndex}
-            key={collection.id}
-          />
-        ))}
+        {collections.length > 0 ? (
+          collections.map((collection, collectionIndex) => (
+            <CollectionItem
+              collection={collection}
+              index={collectionIndex}
+              key={collection.id}
+            />
+          ))
+        ) : (
+          <p>No collections available.</p>
+        )}
       </div>
 
       {/* Next Button */}
-      <button
-        className="circle-next-button"
-        onClick={() => scrollSlider(600)}
-        style={{
-          position: 'absolute',
-          top: '50%',
-          right: '0',
-          transform: 'translateY(-50%)',
-        }}
-      >
-        <CustomRightArrow />
-      </button>
+      {collections.length > 0 && hasOverflow && (
+        <button
+          className="circle-next-button"
+          onClick={() => scrollSlider(600)}
+          style={{
+            position: 'absolute',
+            top: '50%',
+            right: '0',
+            transform: 'translateY(-50%)',
+          }}
+        >
+          <CustomRightArrow />
+        </button>
+      )}
     </div>
   );
 };
