@@ -49,6 +49,7 @@ export default async function handleRequest(
       'https://www.google.com.lb',
       'https://analytics.google.com/',
       'https://td.doubleclick.net/',
+      'https://googleads.g.doubleclick.net',
     ],
     connectSrc: [
       "'self'", // Allow scripts from the same origin
@@ -65,6 +66,7 @@ export default async function handleRequest(
       'https://www.google.com.lb',
       'https://analytics.google.com/',
       'https://td.doubleclick.net/',
+      'https://googleads.g.doubleclick.net',
     ],
     frameSrc: [
       "'self'", // Allow scripts from the same origin
@@ -81,6 +83,7 @@ export default async function handleRequest(
       'https://www.google.com.lb',
       'https://analytics.google.com/',
       'https://td.doubleclick.net/',
+      'https://googleads.g.doubleclick.net',
     ],
     imgSrc: [
       "'self'", // Allow scripts from the same origin
@@ -97,6 +100,7 @@ export default async function handleRequest(
       'https://www.google.com.lb',
       'https://analytics.google.com/',
       'https://td.doubleclick.net/',
+      'https://googleads.g.doubleclick.net',
       // etc.
     ],
   });
