@@ -12,7 +12,7 @@ import {
   useNavigation,
   LiveReload,
 } from '@remix-run/react';
-import favicon from '~/assets/favIcon-971.png';
+import favicon from '~/assets/favicon.ico';
 import resetStyles from '~/styles/reset.css?url';
 import appStyles from '~/styles/app.css?url';
 import tailwindCss from './styles/tailwind.css?url';
