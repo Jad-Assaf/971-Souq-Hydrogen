@@ -39,6 +39,7 @@ export default async function handleRequest(
       'https://www.clarity.ms', // Allow scripts from clarity.ms
       'https://*.clarity.ms', // Allow scripts from clarity.ms
       'https://x.clarity.ms',
+      'https://c.clarity.ms',
       'https://971souq.ae',
       'https://971souq.myshopify.com',
       'https://cdn.shopify.com', // Allow scripts from Shopify CDN
@@ -50,6 +51,7 @@ export default async function handleRequest(
       'https://www.google.com.lb',
       'https://analytics.google.com/',
       'https://td.doubleclick.net/',
+      'https://stats.g.doubleclick.net/',
       'https://googleads.g.doubleclick.net',
     ],
     connectSrc: [
@@ -57,6 +59,7 @@ export default async function handleRequest(
       'https://www.clarity.ms', // Allow scripts from clarity.ms
       'https://*.clarity.ms', // Allow scripts from clarity.ms
       'https://x.clarity.ms',
+      'https://c.clarity.ms',
       'https://971souq.ae',
       'https://971souq.myshopify.com',
       'https://cdn.shopify.com', // Allow scripts from Shopify CDN
@@ -68,6 +71,7 @@ export default async function handleRequest(
       'https://www.google.com.lb',
       'https://analytics.google.com/',
       'https://td.doubleclick.net/',
+      'https://stats.g.doubleclick.net/',
       'https://googleads.g.doubleclick.net',
     ],
     frameSrc: [
@@ -75,6 +79,7 @@ export default async function handleRequest(
       'https://www.clarity.ms', // Allow scripts from clarity.ms
       'https://*.clarity.ms', // Allow scripts from clarity.ms
       'https://x.clarity.ms',
+      'https://c.clarity.ms',
       'https://971souq.ae',
       'https://971souq.myshopify.com',
       'https://cdn.shopify.com', // Allow scripts from Shopify CDN
@@ -86,6 +91,7 @@ export default async function handleRequest(
       'https://www.google.com.lb',
       'https://analytics.google.com/',
       'https://td.doubleclick.net/',
+      'https://stats.g.doubleclick.net/',
       'https://googleads.g.doubleclick.net',
     ],
     imgSrc: [
@@ -93,6 +99,7 @@ export default async function handleRequest(
       'https://www.clarity.ms', // Allow scripts from clarity.ms
       'https://*.clarity.ms', // Allow scripts from clarity.ms
       'https://x.clarity.ms',
+      'https://c.clarity.ms',
       'https://971souq.ae',
       'https://971souq.myshopify.com',
       'https://cdn.shopify.com', // Allow scripts from Shopify CDN
@@ -104,6 +111,7 @@ export default async function handleRequest(
       'https://www.google.com.lb',
       'https://analytics.google.com/',
       'https://td.doubleclick.net/',
+      'https://stats.g.doubleclick.net/',
       'https://googleads.g.doubleclick.net',
       // etc.
     ],
