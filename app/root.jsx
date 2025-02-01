@@ -178,7 +178,7 @@ export function Layout({children}) {
         <meta name="viewport" content="width=device-width,initial-scale=1" />
         <meta
           name="google-site-verification"
-          content="tGAcrZ3TpRDtQqmjqfYOuQpdBqsLCTr5YzcG7syVPEk"
+          content="aiBNfWTvQVYHxyv3v6MAa85InHF5kdcOWUbRZG4Ojb8"
         />
         <script
           async
@@ -266,9 +266,6 @@ export default function App() {
   return <Outlet />;
 }
 
-/**
- * Error boundary component for catching route errors.
- */
 /**
  * Error boundary component for catching route errors.
  */
