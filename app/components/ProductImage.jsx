@@ -1,4 +1,4 @@
-import {useEffect, useState} from 'react';
+import {useEffect, useState, useRef} from 'react';
 import {Image} from '@shopify/hydrogen';
 import Lightbox from 'yet-another-react-lightbox';
 import Fullscreen from 'yet-another-react-lightbox/plugins/fullscreen';
@@ -36,7 +36,8 @@ const RightArrowIcon = () => (
 
 /**
  * @param {{
- *   images: Array<{node: ProductFragment['images']['edges'][0]['node']}>;
+ *   images: Array<{node: {id: string; url: string; altText?: string; width?: number; height?: number}}>;
+ *   selectedVariantImage?: {id: string; url: string;} | null;
  * }}
  */
 export function ProductImages({images, selectedVariantImage}) {
@@ -46,6 +47,13 @@ export function ProductImages({images, selectedVariantImage}) {
   const [isImageLoaded, setIsImageLoaded] = useState(false);
   const [isVariantSelected, setIsVariantSelected] = useState(false);
 
+  // This controls the “use arrow keys” indicator
+  const [showKeyIndicator, setShowKeyIndicator] = useState(false);
+
+  const thumbnailRefs = useRef([]);
+  thumbnailRefs.current = [];
+
+  // Find the variant’s image index, if any
   useEffect(() => {
     if (selectedVariantImage) {
       const variantImageIndex = images.findIndex(
@@ -62,12 +70,43 @@ export function ProductImages({images, selectedVariantImage}) {
     setIsVariantSelected(false);
   }, [selectedVariantImage]);
 
-  const selectedImage = images[selectedImageIndex]?.node;
-
+  // Re-render image on index change
   useEffect(() => {
     setImageKey((prevKey) => prevKey + 1);
     setIsImageLoaded(false);
   }, [selectedImageIndex]);
+
+  // Scroll thumbnail container so the active thumbnail is visible
+  useEffect(() => {
+    if (thumbnailRefs.current[selectedImageIndex]) {
+      thumbnailRefs.current[selectedImageIndex].scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+        inline: 'center',
+      });
+    }
+  }, [selectedImageIndex]);
+
+  // Keyboard: left arrow => prev, right arrow => next
+  useEffect(() => {
+    function handleKeyDown(e) {
+      // If the lightbox is open, ignore global arrow events:
+      if (isLightboxOpen) return;
+
+      if (e.key === 'ArrowLeft') {
+        handlePrevImage();
+        setShowKeyIndicator(false);
+      } else if (e.key === 'ArrowRight') {
+        handleNextImage();
+        setShowKeyIndicator(false);
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [images, isLightboxOpen]);
 
   const handlePrevImage = () => {
     setSelectedImageIndex((prevIndex) =>
@@ -87,8 +126,18 @@ export function ProductImages({images, selectedVariantImage}) {
   const swipeHandlers = useSwipeable({
     onSwipedLeft: handleNextImage,
     onSwipedRight: handlePrevImage,
-    trackMouse: true, // Allows swiping with a mouse for desktops
+    trackMouse: true,
   });
+
+  const selectedImage = images[selectedImageIndex]?.node;
+
+  // We fade in the arrow-keys hint on mouse enter,
+  // fade out immediately when the user clicks an arrow or uses keyboard
+  const handleMouseEnter = () => setShowKeyIndicator(true);
+  const handleArrowClick = (callback) => {
+    callback();
+    setShowKeyIndicator(false);
+  };
 
   return (
     <div className="product-images-container">
@@ -101,6 +150,7 @@ export function ProductImages({images, selectedVariantImage}) {
               className={`thumbnail ${
                 index === selectedImageIndex ? 'active' : ''
               }`}
+              ref={(el) => (thumbnailRefs.current[index] = el)}
               onClick={() => setSelectedImageIndex(index)}
             >
               <Image
@@ -109,7 +159,7 @@ export function ProductImages({images, selectedVariantImage}) {
                 aspectratio="1/1"
                 width={80}
                 height={80}
-                loading="lazy" // Thumbnails can load lazily
+                loading="lazy"
                 decoding="async"
               />
             </div>
@@ -143,20 +193,33 @@ export function ProductImages({images, selectedVariantImage}) {
           </div>
         )}
         <div className="ImageArrows">
+          {/* INDICATOR for Arrow Keys */}
+          {showKeyIndicator && (
+            <div className="key-indicator">
+              <div className="arrow-icons">
+                <span>⇦</span>
+                <span>⇨</span>
+              </div>
+              <p>Use arrow keys</p>
+            </div>
+          )}
+
           <button
             className="prev-button"
+            onMouseEnter={handleMouseEnter}
             onClick={(e) => {
               e.stopPropagation();
-              handlePrevImage();
+              handleArrowClick(handlePrevImage);
             }}
           >
             <LeftArrowIcon />
           </button>
           <button
             className="next-button"
+            onMouseEnter={handleMouseEnter}
             onClick={(e) => {
               e.stopPropagation();
-              handleNextImage();
+              handleArrowClick(handleNextImage);
             }}
           >
             <RightArrowIcon />

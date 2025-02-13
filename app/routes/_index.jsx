@@ -49,12 +49,12 @@ export const meta = ({data}) => {
   const truncate = (text, maxLength) =>
     text?.length > maxLength ? `${text.slice(0, maxLength - 3)}...` : text;
   return getSeoMeta({
-    title: data?.title || 'Default Title',
+    title: 'MacArabia',
     description: truncate(
       data?.description || 'Default description for this page.',
       150,
     ),
-    url: data?.url || 'https://971souq.ae',
+    url: data?.url || 'https://macarabia.me',
     jsonLd: [
       {
         '@context': 'https://schema.org',
@@ -64,18 +64,18 @@ export const meta = ({data}) => {
           data?.description || 'Default description for this page.',
           150,
         ),
-        url: data?.url || 'https://971souq.ae',
+        url: data?.url || 'https://macarabia.me',
       },
       {
         '@context': 'http://schema.org',
         '@type': 'WebSite',
-        name: '971souq.ae',
+        name: 'Macarabia.me',
         potentialAction: {
           '@type': 'SearchAction',
-          target: 'https://971souq.ae/search?q={search_term_string}',
+          target: 'https://macarabia.me/search?q={search_term_string}',
           'query-input': 'required name=search_term_string',
         },
-        url: 'https://971souq.ae',
+        url: 'https://macarabia.me',
       },
     ],
   });
@@ -262,7 +262,7 @@ async function loadCriticalData({context}) {
     sliderCollections,
     title: shop.name,
     description: shop.description,
-    url: 'https://971souq.ae',
+    url: 'https://macarabia.me',
   };
 }
 
@@ -424,9 +424,7 @@ const brandsData = [
 ];
 
 export default function Homepage() {
-  const {banners, sliderCollections, topProducts} =
-    useLoaderData();
-
+  const {banners, sliderCollections, topProducts} = useLoaderData();
 
   return (
     <div className="home">

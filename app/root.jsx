@@ -1,3 +1,4 @@
+// src/root.jsx
 import {useNonce, getShopAnalytics, Analytics} from '@shopify/hydrogen';
 import {defer} from '@shopify/remix-oxygen';
 import {
@@ -12,14 +13,15 @@ import {
   useNavigation,
   LiveReload,
 } from '@remix-run/react';
-import favicon from '~/assets/favicon.ico';
+import favicon from '~/assets/macarabia-favicon-black_32x32.jpg';
 import resetStyles from '~/styles/reset.css?url';
 import appStyles from '~/styles/app.css?url';
 import tailwindCss from './styles/tailwind.css?url';
 import {PageLayout} from '~/components/PageLayout';
 import {FOOTER_QUERY, HEADER_QUERY} from '~/lib/fragments';
-import {useEffect, useState} from 'react';
+import React, {Suspense, useEffect, useState} from 'react';
 import ClarityTracker from './components/ClarityTracker';
+const MetaPixel = React.lazy(() => import('./components/MetaPixel'));
 
 /**
  * This is important to avoid re-fetching root queries on sub-navigations
@@ -35,6 +37,8 @@ export const shouldRevalidate = ({
   if (currentUrl.toString() === nextUrl.toString()) return true;
   return defaultShouldRevalidate;
 };
+
+const PIXEL_ID = '321309553208857'; // Replace with your actual Pixel ID
 
 export function links() {
   return [
@@ -96,7 +100,7 @@ async function loadCriticalData({context}) {
   try {
     // Fetch header data using the HEADER_QUERY
     const header = await storefront.query(HEADER_QUERY, {
-      variables: {headerMenuHandle: 'main-menu-2'},
+      variables: {headerMenuHandle: 'main-menu'},
     });
 
     // Process nested menus to extract images
@@ -116,20 +120,20 @@ async function loadCriticalData({context}) {
 function loadDeferredData({context}) {
   const {storefront, customerAccount, cart} = context;
 
-  // const footer = storefront
-  //   .query(FOOTER_QUERY, {
-  //     cache: storefront.CacheLong(),
-  //     variables: {footerMenuHandle: 'footer-menu'},
-  //   })
-  //   .catch((error) => {
-  //     console.error(error);
-  //     return null;
-  //   });
+  const footer = storefront
+    .query(FOOTER_QUERY, {
+      cache: storefront.CacheLong(),
+      variables: {footerMenuHandle: 'footer-menu'},
+    })
+    .catch((error) => {
+      console.error(error);
+      return null;
+    });
 
   return {
     cart: cart.get(),
     isLoggedIn: customerAccount.isLoggedIn(),
-    // footer,
+    footer,
   };
 }
 
@@ -141,7 +145,7 @@ export function Layout({children}) {
   const data = useRouteLoaderData('root');
   const navigation = useNavigation();
   const [nprogress, setNProgress] = useState(null); // Store NProgress instance
-  const clarityId = 'pu879q40kz'; // Replace with your Clarity project ID
+  const clarityId = 'pfyepst8v5'; // Replace with your Clarity project ID
 
   useEffect(() => {
     // Load NProgress once and set it in the state
@@ -178,17 +182,20 @@ export function Layout({children}) {
         <meta name="viewport" content="width=device-width,initial-scale=1" />
         <meta
           name="google-site-verification"
-          content="aiBNfWTvQVYHxyv3v6MAa85InHF5kdcOWUbRZG4Ojb8"
+          content="tGAcrZ3TpRDtQqmjqfYOuQpdBqsLCTr5YzcG7syVPEk"
+        />
+        <Meta />
+        <Links />
+        <meta
+          name="facebook-domain-verification"
+          content="ca1idnp1x728fhk6zouywowcqgb2xt"
         />
         <script
-          async
           nonce={nonce}
-          src="https://www.googletagmanager.com/gtag/js?id=G-KW81WPYWZN"
+          src="https://www.googletagmanager.com/gtag/js?id=G-3PZN80E9FJ"
         ></script>
 
-        {/* 2. Inline GA Initialization Script */}
         <script
-          async
           nonce={nonce}
           dangerouslySetInnerHTML={{
             __html: `
@@ -196,47 +203,13 @@ export function Layout({children}) {
               function gtag(){dataLayer.push(arguments);}
               gtag('js', new Date());
 
-              gtag('config', 'G-KW81WPYWZN');
+              gtag('config', 'G-3PZN80E9FJ');
             `,
           }}
         ></script>
-        <script
-          defer
-          nonce={nonce}
-          src="https://shown.io/metrics/db07REXo9x"
-          type="text/javascript"
-        ></script>
-        <script
-          defer
-          nonce={nonce}
-          dangerouslySetInnerHTML={{
-            __html: `
-              window.onload = function() {
-                (function(f,b,e,v,n,t,s) {
-                  if(f.fbq) return;
-                  n = f.fbq = function() {
-                    n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments);
-                  };
-                  if(!f._fbq) f._fbq = n;
-                  n.push = n;
-                  n.loaded = !0;
-                  n.version = '2.0';
-                  n.queue = [];
-                  t = b.createElement(e);
-                  t.async = !0;
-                  t.src = v;
-                  s = b.getElementsByTagName(e)[0];
-                  s.parentNode.insertBefore(t,s);
-                })(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
-                
-                fbq('init', '1043240287181510⁠⁠');
-                fbq('track', 'PageView');
-              };
-            `,
-          }}
-        />
-        <Meta />
-        <Links />
+        <Suspense fallback={null}>
+          <MetaPixel pixelId={PIXEL_ID} />
+        </Suspense>
       </head>
       <body>
         <ClarityTracker clarityId={clarityId} />
@@ -253,7 +226,7 @@ export function Layout({children}) {
         )}
         <ScrollRestoration nonce={nonce} />
         <Scripts nonce={nonce} />
-        {/* <LiveReload nonce={nonce} /> */}
+        <LiveReload nonce={nonce} />
       </body>
     </html>
   );

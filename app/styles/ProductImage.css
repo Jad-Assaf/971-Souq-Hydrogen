@@ -1,5 +1,5 @@
-@media (max-width: 1024px){
-    .ImageArrows{
+@media (max-width: 1024px) {
+    .ImageArrows {
         width: 95vw !important;
         transform: translateX(-12.5%);
     }
@@ -17,6 +17,7 @@
     width: 95vw;
     max-width: 90%;
     overflow-x: auto;
+    scrollbar-width: none;
 }
 
 .thumbnails {
@@ -31,8 +32,11 @@
     height: auto;
     cursor: pointer;
     border: 1px solid transparent;
-    border-radius: 3px;
+    border-radius: 6px;
     transition: border 0.3s, transform 0.2s;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .thumbnail.active {
@@ -58,6 +62,46 @@
 
 .main-image:hover {
     transform: scale(1.01);
+}
+
+.main-image iframe {
+    aspect-ratio: 1028/1028;
+}
+
+/* Container for YouTube iframe to maintain aspect ratio */
+.youtube-iframe-container {
+    position: relative;
+    padding-bottom: 56.25%;
+    /* 16:9 */
+    padding-top: 25px;
+    height: 0;
+}
+
+/* Play icon overlay on video thumbnails */
+.play-icon-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    /* Allows click through to the thumbnail */
+    opacity: 0.8;
+}
+
+/* Position the play icon container relative to thumbnail */
+.thumbnail {
+    position: relative;
+    cursor: pointer;
+}
+
+.thumbnail img,
+.thumbnail video,
+.thumbnail .play-icon-overlay svg {
+    display: block;
+}
+
+.thumbnail .play-icon-overlay {
+    /* Ensure the play icon is centered */
 }
 
 .prev-button,
@@ -106,11 +150,58 @@
     backdrop-filter: blur(15px) !important;
 }
 
-.ImageArrows{
+.ImageArrows {
     width: 100%;
     display: flex;
     justify-content: space-between;
     align-items: center;
     position: absolute;
     top: 50%;
+}
+
+.key-indicator {
+    position: absolute;
+    top: -40px;
+    /* position it above the arrows */
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.7);
+    color: #fff;
+    padding: 6px 10px;
+    border-radius: 4px;
+    opacity: 0;
+    animation: fadeIn 0.3s forwards;
+    /* fade in quickly */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* The arrow icons do a small left-right "wiggle" */
+.arrow-icons {
+    display: flex;
+    gap: 8px;
+    animation: moveLeftRight 0.8s infinite alternate ease-in-out;
+}
+
+/* basic fade in animation for the indicator */
+@keyframes fadeIn {
+    0% {
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+
+/* move the arrow icons left to right a bit */
+@keyframes moveLeftRight {
+    0% {
+        transform: translateX(-3px);
+    }
+
+    100% {
+        transform: translateX(3px);
+    }
 }

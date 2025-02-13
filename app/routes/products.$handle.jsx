@@ -12,7 +12,7 @@ import {
 } from '@shopify/hydrogen';
 import {getVariantUrl} from '~/lib/variants';
 import {ProductPrice} from '~/components/ProductPrice';
-import {ProductImages} from '~/components/ProductImage';
+import {ProductImages} from '~/components/ProductImage'; // We'll update ProductImage.jsx to handle media.
 import {AddToCartButton} from '~/components/AddToCartButton';
 import {useAside} from '~/components/Aside';
 import '../styles/ProductPage.css';
@@ -21,7 +21,9 @@ import {RELATED_PRODUCTS_QUERY} from '~/lib/fragments';
 import RelatedProductsRow from '~/components/RelatedProducts';
 import {ProductMetafields} from '~/components/Metafields';
 import RecentlyViewedProducts from '../components/RecentlyViewed';
+import {trackAddToCart, trackViewContent} from '~/lib/metaPixelEvents';
 
+// ---------------- SEO & Meta
 export const meta = ({data}) => {
   const product = data?.product;
   const variants = product?.variants?.nodes || [];
@@ -33,11 +35,11 @@ export const meta = ({data}) => {
 
   const image =
     product.images?.edges?.[0]?.node?.url ||
-    'https://cdn.shopify.com/s/files/1/0858/6821/6639/files/971Souqlogo01_303ae373-185d-40f3-8271-df151d977a10.png?v=1706447237';
+    'https://cdn.shopify.com/s/files/1/0858/6821/6639/files/macarabialogo01_303ae373-185d-40f3-8271-df151d977a10.png?v=1706447237';
 
   return getSeoMeta({
     title: truncate(
-      product?.seoTitle || product?.title || '971Souq Product',
+      product?.seoTitle || product?.title || 'Macarabia Product',
       140,
     ),
     description: truncate(
@@ -46,7 +48,7 @@ export const meta = ({data}) => {
         'Discover this product.',
       150,
     ),
-    url: `https://971souq.ae/products/${encodeURIComponent(product?.handle)}`,
+    url: `https://macarabia.me/products/${encodeURIComponent(product?.handle)}`,
     'og:image': image,
     'twitter:image': image,
     jsonLd: [
@@ -54,19 +56,19 @@ export const meta = ({data}) => {
         '@context': 'http://schema.org/',
         '@type': 'Product',
         name: truncate(product?.title, 140),
-        url: `https://971souq.ae/products/${encodeURIComponent(
+        url: `https://macarabia.me/products/${encodeURIComponent(
           product?.handle,
         )}`,
         sku: currentVariant?.sku || product?.id,
         productID: product?.id,
         brand: {
           '@type': 'Brand',
-          name: product?.vendor || '971Souq',
+          name: product?.vendor || 'Macarabia',
         },
         description: truncate(product?.description || '', 150),
         image:
           product?.firstImage ||
-          'https://cdn.shopify.com/s/files/1/0858/6821/6639/files/971Souqlogo01_303ae373-185d-40f3-8271-df151d977a10.png?v=1706447237',
+          'https://cdn.shopify.com/s/files/1/0858/6821/6639/files/macarabialogo01_303ae373-185d-40f3-8271-df151d977a10.png?v=1706447237',
         offers: variants.map((variant) => ({
           '@type': 'Offer',
           priceCurrency:
@@ -76,7 +78,7 @@ export const meta = ({data}) => {
           availability: variant?.availableForSale
             ? 'http://schema.org/InStock'
             : 'http://schema.org/OutOfStock',
-          url: `https://971souq.ae/products/${encodeURIComponent(
+          url: `https://macarabia.me/products/${encodeURIComponent(
             product?.handle,
           )}?variant=${variant?.id}`,
           image: variant?.image?.url || product?.firstImage || '',
@@ -153,13 +155,13 @@ export const meta = ({data}) => {
             '@type': 'ListItem',
             position: 1,
             name: 'Home',
-            item: 'https://971souq.ae',
+            item: 'https://macarabia.me',
           },
           {
             '@type': 'ListItem',
             position: 2,
             name: truncate(product?.title || 'Product', 140),
-            item: `https://971souq.ae/products/${encodeURIComponent(
+            item: `https://macarabia.me/products/${encodeURIComponent(
               product?.handle,
             )}`,
           },
@@ -169,6 +171,7 @@ export const meta = ({data}) => {
   });
 };
 
+// ---------------- Loader
 export async function loader(args) {
   const deferredData = loadDeferredData(args);
   const criticalData = await loadCriticalData(args);
@@ -225,9 +228,9 @@ async function loadCriticalData({context, params, request}) {
     product: {
       ...product,
       firstImage, // Add the first image URL
-      seoTitle: product.seo?.title || product.title, // Use SEO title or fallback
-      seoDescription: product.seo?.description || product.description, // Use SEO description or fallback
-      variantPrice: firstVariant?.price || product.priceRange?.minVariantPrice, // Variant price
+      seoTitle: product.seo?.title || product.title,
+      seoDescription: product.seo?.description || product.description,
+      variantPrice: firstVariant?.price || product.priceRange?.minVariantPrice,
     },
     relatedProducts,
   };
@@ -263,7 +266,9 @@ function redirectToFirstVariant({product, request}) {
   );
 }
 
-// -------------- ProductForm --------------
+// -----------------------------------------------------
+//                   ProductForm
+// -----------------------------------------------------
 
 function isValueAvailable(allVariants, selectedOptions, optionName, val) {
   const updated = {...selectedOptions, [optionName]: val};
@@ -279,12 +284,6 @@ function isValueAvailable(allVariants, selectedOptions, optionName, val) {
   );
 }
 
-/**
- * We attempt a perfect match for newOptions.
- * If that fails, we fallback to any in-stock variant
- * that has (optionName === chosenVal),
- * then override newOptions with that variant’s entire selection.
- */
 function pickOrSnapVariant(allVariants, newOptions, optionName, chosenVal) {
   // 1) Perfect match
   let found = allVariants.find(
@@ -307,6 +306,7 @@ function pickOrSnapVariant(allVariants, newOptions, optionName, chosenVal) {
 
 export function ProductForm({
   product,
+  onAddToCart,
   selectedVariant,
   onVariantChange,
   variants = [],
@@ -331,6 +331,12 @@ export function ProductForm({
       return acc;
     }, {});
   });
+
+  const handleAddToCart = () => {
+    // Track the AddToCart event
+    trackAddToCart(product);
+    onAddToCart(product);
+  };
 
   // Sync local state when the parent’s selectedVariant changes
   useEffect(() => {
@@ -443,10 +449,10 @@ export function ProductForm({
   // Possibly build a WhatsApp link
   const isProductPage = location.pathname.includes('/products/');
   const whatsappShareUrl = `https://api.whatsapp.com/send?phone=9613020030&text=${encodeURIComponent(
-    `Hi, I'd like to buy ${product.title} https://971souq.ae${location.pathname}`,
+    `Hi, I'd like to buy ${product.title} https://macarabia.me${location.pathname}`,
   )}`;
 
-  // WhatsApp SVG icon (if you still want the share button)
+  // WhatsApp SVG icon
   const WhatsAppIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 175.216 175.552">
       <defs>
@@ -495,7 +501,6 @@ export function ProductForm({
 
   return (
     <>
-      {/* Renders the variant options (size, color, etc.) */}
       <VariantSelector
         handle={product.handle}
         options={product.options.filter((o) => o.values.length > 1)}
@@ -505,10 +510,12 @@ export function ProductForm({
       </VariantSelector>
 
       <div className="product-form">
-        {/* An Add-to-Cart button with the found (or parent’s) selectedVariant */}
         <AddToCartButton
           disabled={!selectedVariant || !selectedVariant.availableForSale}
-          onClick={() => open('cart')}
+          onClick={() => {
+            handleAddToCart();
+            open('cart'); // open cart aside
+          }}
           lines={
             selectedVariant
               ? [{merchandiseId: selectedVariant.id, quantity: safeQuantity}]
@@ -518,7 +525,6 @@ export function ProductForm({
           {selectedVariant?.availableForSale ? 'Add to cart' : 'Sold out'}
         </AddToCartButton>
 
-        {/* Optional WhatsApp share link */}
         {isProductPage && (
           <a
             href={whatsappShareUrl}
@@ -535,103 +541,67 @@ export function ProductForm({
   );
 }
 
-// function DirectCheckoutButton({selectedVariant, quantity}) {
-//   const [isAnimating, setIsAnimating] = useState(false);
-//   const [shouldRedirect, setShouldRedirect] = useState(false);
-
-//   const handleAnimation = () => {
-//     setIsAnimating(true);
-//     setTimeout(() => {
-//       setIsAnimating(false);
-//       setShouldRedirect(true);
-//     }, 300);
-//   };
-
-//   useEffect(() => {
-//     return () => {
-//       setShouldRedirect(false);
-//     };
-//   }, []);
-
-//   const isUnavailable = !selectedVariant?.availableForSale;
-
-//   return (
-//     <CartForm
-//       route="/cart"
-//       action={CartForm.ACTIONS.LinesAdd}
-//       inputs={{
-//         lines: [
-//           {
-//             merchandiseId: selectedVariant?.id,
-//             quantity: quantity,
-//             selectedOptions: selectedVariant?.selectedOptions,
-//           },
-//         ],
-//       }}
-//     >
-//       {(fetcher) => {
-//         if (shouldRedirect && fetcher.data?.cart?.checkoutUrl) {
-//           window.location.href = fetcher.data.cart.checkoutUrl;
-//         }
-
-//         return (
-//           <motion.button
-//             type="submit"
-//             disabled={isUnavailable || fetcher.state !== 'idle'}
-//             className={`buy-now-button ${isUnavailable ? 'disabled' : ''}`}
-//             onClick={handleAnimation}
-//             animate={isAnimating ? { scale: 1.05 } : { scale: 1 }}
-//             transition={{ duration: 0.3 }}
-//           >
-//             Buy Now
-//           </motion.button>
-//         );
-//       }}
-//     </CartForm>
-//   );
-// }
-// ─────────────────────────────────────────────────────────────────────────────
-
+// -----------------------------------------------------
+//                   Main Product
+// -----------------------------------------------------
 export default function Product() {
   const {product, variants, relatedProducts} = useLoaderData();
+
+  // Safeguard: If `product` is unexpectedly undefined for any reason, bail out early.
+  if (!product) {
+    return <div>Loading product data...</div>;
+  }
+
   const [selectedVariant, setSelectedVariant] = useState(
     product.selectedVariant,
   );
-
-  useEffect(() => {
-    setSelectedVariant(product.selectedVariant);
-    setQuantity(1); // If you want to reset quantity to 1 for new product
-  }, [product]);
-
   const [quantity, setQuantity] = useState(1);
   const [subtotal, setSubtotal] = useState(0);
-
-  const incrementQuantity = () => setQuantity((prev) => prev + 1);
-  const decrementQuantity = () =>
-    setQuantity((prev) => (prev > 1 ? prev - 1 : 1));
-
   const [activeTab, setActiveTab] = useState('description');
 
   useEffect(() => {
-    if (selectedVariant && selectedVariant.price) {
+    // Reset when the product changes
+    setSelectedVariant(product.selectedVariant);
+    setQuantity(1);
+  }, [product]);
+
+  useEffect(() => {
+    trackViewContent(product);
+  }, [product]);
+
+  useEffect(() => {
+    if (selectedVariant?.price) {
       const price = parseFloat(selectedVariant.price.amount);
       setSubtotal(price * quantity);
     }
   }, [quantity, selectedVariant]);
 
-  const {title, descriptionHtml, images} = product;
+  const incrementQuantity = () => setQuantity((prev) => prev + 1);
+  const decrementQuantity = () =>
+    setQuantity((prev) => (prev > 1 ? prev - 1 : 1));
+
+  const {title, descriptionHtml} = product;
 
   const hasDiscount =
     selectedVariant?.compareAtPrice &&
-    selectedVariant.price.amount !== selectedVariant.compareAtPrice.amount;
+    selectedVariant?.price?.amount !== selectedVariant?.compareAtPrice?.amount;
+
+  const onAddToCart = (prod) => {
+    trackAddToCart(prod);
+  };
 
   return (
     <div className="product">
       <div className="ProductPageTop">
+        {/* 
+          Replace media={product.media.edges} with images={product.images?.edges || []} 
+          and rely on selectedVariantImage to update when variant changes.
+        */}
         <ProductImages
-          images={product.images.edges}
+          images={product.images?.edges || []} // <-- Safely handle missing images
           selectedVariantImage={selectedVariant?.image}
         />
+
         <div className="product-main">
           <h1>{title}</h1>
           <div className="price-container">
@@ -640,11 +610,11 @@ export default function Product() {
             >
               <Money data={selectedVariant?.price} />
             </small>
-            {/* {hasDiscount && selectedVariant.compareAtPrice && (
+            {hasDiscount && selectedVariant?.compareAtPrice && (
               <small className="discountedPrice">
-                <Money data={selectedVariant?.compareAtPrice} />
+                <Money data={selectedVariant.compareAtPrice} />
               </small>
-            )} */}
+            )}
           </div>
           <div className="quantity-selector">
             <p>Quantity</p>
@@ -664,15 +634,30 @@ export default function Product() {
             })}
           </div>
 
-          <Suspense fallback={<div>Loading options...</div>}>
-            <Await resolve={variants}>
-              {({product: variantProduct}) => (
+          <Suspense
+            fallback={
+              <ProductForm
+                product={product}
+                selectedVariant={selectedVariant}
+                onVariantChange={setSelectedVariant}
+                onAddToCart={onAddToCart}
+                variants={[]}
+                quantity={Number(quantity)}
+              />
+            }
+          >
+            <Await
+              resolve={variants}
+              errorElement="There was a problem loading product variants"
+            >
+              {(data) => (
                 <ProductForm
                   product={product}
                   selectedVariant={selectedVariant}
                   onVariantChange={setSelectedVariant}
-                  variants={variantProduct.variants.nodes}
-                  quantity={Number(quantity)}
+                  onAddToCart={onAddToCart}
+                  variants={data?.product?.variants?.nodes || []}
+                  quantity={quantity}
                 />
               )}
             </Await>
@@ -698,7 +683,7 @@ export default function Product() {
               </li>
             </ul>
           </div>
-          <hr className="productPage-hr"></hr>
+          <hr className="productPage-hr" />
           <ProductMetafields
             metafieldCondition={product.metafieldCondition}
             metafieldWarranty={product.metafieldWarranty}
@@ -707,6 +692,7 @@ export default function Product() {
           />
         </div>
       </div>
+
       <div className="ProductPageBottom">
         <div className="tabs">
           <button
@@ -738,7 +724,8 @@ export default function Product() {
           unmountOnExit
         >
           <div className="product-section">
-            <div dangerouslySetInnerHTML={{__html: descriptionHtml}} />
+            {/* Safeguard if descriptionHtml is missing */}
+            <div dangerouslySetInnerHTML={{__html: descriptionHtml || ''}} />
           </div>
         </CSSTransition>
 
@@ -777,35 +764,11 @@ export default function Product() {
               or proof of purchase.
             </p>
             <p>
-              To initiate an exchange, please contact us at admin@971souq.ae.
+              To initiate an exchange, please contact us at admin@macarabia.me.
               Upon approval of your exchange request, we will furnish you with
               an exchange shipping label along with comprehensive instructions
               for package return. Please note that exchanges initiated without
               prior authorization will not be accepted.
-            </p>
-            <p>
-              Should you encounter any damages or issues upon receiving your
-              order, please inspect the item immediately and notify us promptly.
-              We will swiftly address any defects, damages, or incorrect
-              shipments to ensure your satisfaction.
-            </p>
-            <h5>Exceptions / Non-exchangeable Items</h5>
-            <p>
-              Certain items are exempt from our exchange policy, including
-              perishable goods (such as headsets, earphones, and network card
-              wifi routers), custom-made products (such as special orders or
-              personalized items), and pre-ordered goods. For queries regarding
-              specific items, please reach out to us.
-            </p>
-            <p>
-              Unfortunately, we are unable to accommodate exchanges for sale
-              items or gift cards.
-            </p>
-            <h5>Exchanges</h5>
-            <p>
-              The most efficient method to secure the item you desire is to
-              exchange the original item, and upon acceptance of your exchange,
-              proceed with a separate purchase for the desired replacement.
             </p>
           </div>
         </CSSTransition>
@@ -820,15 +783,14 @@ export default function Product() {
             <h3>Operational Warranty Terms and Conditions</h3>
             <h3>Warranty Coverage</h3>
             <p>
-              This warranty applies to All Products, purchased from 971Souq. The
-              warranty covers defects in materials and workmanship under normal
-              use for the period specified at the time of purchase. Warranty
-              periods vary based on the product category.
+              This warranty applies to All Products, purchased from Macarabia.
+              The warranty covers defects in materials and workmanship under
+              normal use for the period specified at the time of purchase.
             </p>
             <h3>What is Covered</h3>
             <p>
-              During the warranty period, 971Souq will repair or replace, at no
-              charge, any parts that are found to be defective due to faulty
+              During the warranty period, Macarabia will repair or replace, at
+              no charge, any parts that are found to be defective due to faulty
               materials or poor workmanship. This warranty is valid only for the
               original purchaser and is non-transferable.
             </p>
@@ -854,29 +816,30 @@ export default function Product() {
             <p>To make a claim under this warranty:</p>
             <ol>
               <li>
-                Contact admin@971souq.ae with proof of purchase and a detailed
+                Contact admin@macarabia.me with proof of purchase and a detailed
                 description of the issue.
               </li>
               <li>
-                971Souq will assess the product and, if deemed defective, repair
-                or replace the item at no cost.
+                Macarabia will assess the product and, if deemed defective,
+                repair or replace the item at no cost.
               </li>
             </ol>
             <h3>Limitations and Exclusions</h3>
             <p>
-              This warranty is limited to repair or replacement. 971Souq will
+              This warranty is limited to repair or replacement. Macarabia will
               not be liable for any indirect, consequential, or incidental
               damages, including loss of data or loss of profits.
             </p>
           </div>
         </CSSTransition>
+
         <Analytics.ProductView
           data={{
             products: [
               {
                 id: product.id,
                 title: product.title,
-                price: selectedVariant?.price.amount || '0',
+                price: selectedVariant?.price?.amount || '0',
                 vendor: product.vendor,
                 variantId: selectedVariant?.id || '',
                 variantTitle: selectedVariant?.title || '',
@@ -886,17 +849,24 @@ export default function Product() {
           }}
         />
       </div>
+
       <div className="related-products-row">
         <div className="related-products">
+          <h2>Related Products</h2>
           <RelatedProductsRow products={relatedProducts || []} />
         </div>
       </div>
       <div className="recently-viewed-container">
+        <h2>Recently Viewed Products</h2>
         <RecentlyViewedProducts currentProductId={product.id} />
       </div>
     </div>
   );
 }
+
+// -----------------------------------------------------
+//                   GraphQL
+// -----------------------------------------------------
 
 const PRODUCT_VARIANT_FRAGMENT = `#graphql
   fragment ProductVariant on ProductVariant {
@@ -956,6 +926,8 @@ const PRODUCT_FRAGMENT = `#graphql
     descriptionHtml
     description
     productType
+
+    # Fetch product images for SEO or fallback usage
     images(first: 30) {
       edges {
         node {
@@ -968,6 +940,45 @@ const PRODUCT_FRAGMENT = `#graphql
         }
       }
     }
+
+    # Add media for images / video (YouTube) / 3D, etc.
+    media(first: 10) {
+      edges {
+        node {
+          __typename
+          mediaContentType
+          alt
+          ... on MediaImage {
+            id
+            image {
+              url
+              altText
+              width
+              height
+            }
+          }
+          ... on Video {
+            id
+            sources {
+              url
+              mimeType
+            }
+          }
+          ... on ExternalVideo {
+            id
+            embedUrl
+            host
+          }
+          ... on Model3d {
+            id
+            sources {
+              url
+            }
+          }
+        }
+      }
+    }
+
     options {
       name
       values
