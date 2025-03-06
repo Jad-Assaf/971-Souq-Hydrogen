@@ -100,7 +100,7 @@ async function loadCriticalData({context}) {
   try {
     // Fetch header data using the HEADER_QUERY
     const header = await storefront.query(HEADER_QUERY, {
-      variables: {headerMenuHandle: 'main-menu'},
+      variables: {headerMenuHandle: 'main-menu-2'},
     });
 
     // Process nested menus to extract images
