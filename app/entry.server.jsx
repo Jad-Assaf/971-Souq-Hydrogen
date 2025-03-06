@@ -19,8 +19,8 @@ export default async function handleRequest(
   context,
 ) {
   const url = new URL(request.url);
-  if (url.hostname === 'www.macarabia.me') {
-    const redirectUrl = `https://macarabia.me${url.pathname}${url.search}`;
+  if (url.hostname === 'www.971souq.ae') {
+    const redirectUrl = `https://971souq.ae${url.pathname}${url.search}`;
     return new Response(null, {
       status: 301,
       headers: {
@@ -40,8 +40,8 @@ export default async function handleRequest(
       'https://*.clarity.ms', // Allow scripts from clarity.ms
       'https://x.clarity.ms',
       'https://c.clarity.ms',
-      'https://macarabia.me',
-      'https://macarabia.myshopify.com',
+      'https://971souq.ae',
+      'https://971souq.myshopify.com',
       'https://cdn.shopify.com', // Allow scripts from Shopify CDN
       'https://www.facebook.com',
       'https://connect.facebook.net', // Required for Meta Pixel
@@ -64,8 +64,8 @@ export default async function handleRequest(
       'https://*.clarity.ms', // Allow scripts from clarity.ms
       'https://x.clarity.ms',
       'https://c.clarity.ms',
-      'https://macarabia.me',
-      'https://macarabia.myshopify.com',
+      'https://971souq.ae',
+      'https://971souq.myshopify.com',
       'https://cdn.shopify.com', // Allow scripts from Shopify CDN
       'https://www.facebook.com',
       'https://connect.facebook.net', // Required for Meta Pixel
@@ -88,8 +88,8 @@ export default async function handleRequest(
       'https://*.clarity.ms',
       'https://x.clarity.ms',
       'https://c.clarity.ms',
-      'https://macarabia.me',
-      'https://macarabia.myshopify.com',
+      'https://971souq.ae',
+      'https://971souq.myshopify.com',
       'https://cdn.shopify.com',
       'https://www.facebook.com',
       'https://connect.facebook.net',
@@ -114,8 +114,8 @@ export default async function handleRequest(
       'https://*.clarity.ms',
       'https://x.clarity.ms',
       'https://c.clarity.ms',
-      'https://macarabia.me',
-      'https://macarabia.myshopify.com',
+      'https://971souq.ae',
+      'https://971souq.myshopify.com',
       'https://cdn.shopify.com',
       'https://www.facebook.com',
       'https://connect.facebook.net',
@@ -137,9 +137,9 @@ export default async function handleRequest(
     mediaSrc: [
       "'self'",
       'https://cdn.shopify.com', // Shopify CDN for direct videos
-      'https://www.macarabia.me',
-      'https://macarabia.me',
-      'https://macarabia.myshopify.com',
+      'https://www.971souq.ae',
+      'https://971souq.ae',
+      'https://971souq.myshopify.com',
       'https://www.youtube.com',
       'https://www.youtube-nocookie.com',
       'https://img.icons8.com',

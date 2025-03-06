@@ -13,7 +13,7 @@ import {
   useNavigation,
   LiveReload,
 } from '@remix-run/react';
-import favicon from '~/assets/macarabia-favicon-black_32x32.jpg';
+// import favicon from '~/assets/macarabia-favicon-black_32x32.jpg';
 import resetStyles from '~/styles/reset.css?url';
 import appStyles from '~/styles/app.css?url';
 import tailwindCss from './styles/tailwind.css?url';
