@@ -47,7 +47,7 @@ export function links() {
     {rel: 'stylesheet', href: tailwindCss},
     {rel: 'preconnect', href: 'https://cdn.shopify.com'},
     {rel: 'preconnect', href: 'https://shop.app'},
-    {rel: 'icon', type: 'image/svg+xml', href: favicon},
+    // {rel: 'icon', type: 'image/svg+xml', href: favicon},
   ];
 }
 
