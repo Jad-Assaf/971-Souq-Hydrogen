@@ -21,7 +21,7 @@ import {RELATED_PRODUCTS_QUERY} from '~/lib/fragments';
 import RelatedProductsRow from '~/components/RelatedProducts';
 import {ProductMetafields} from '~/components/Metafields';
 import RecentlyViewedProducts from '../components/RecentlyViewed';
-import {trackAddToCart, trackViewContent} from '~/lib/metaPixelEvents';
+// import {trackAddToCart, trackViewContent} from '~/lib/metaPixelEvents';
 
 // ---------------- SEO & Meta
 export const meta = ({data}) => {
