@@ -306,7 +306,6 @@ function pickOrSnapVariant(allVariants, newOptions, optionName, chosenVal) {
 
 export function ProductForm({
   product,
-  onAddToCart,
   selectedVariant,
   onVariantChange,
   variants = [],
@@ -331,12 +330,6 @@ export function ProductForm({
       return acc;
     }, {});
   });
-
-  // const handleAddToCart = () => {
-  //   // Track the AddToCart event
-  //   trackAddToCart(product);
-  //   onAddToCart(product);
-  // };
 
   // Sync local state when the parent’s selectedVariant changes
   useEffect(() => {
@@ -586,10 +579,6 @@ export default function Product() {
     selectedVariant?.compareAtPrice &&
     selectedVariant?.price?.amount !== selectedVariant?.compareAtPrice?.amount;
 
-  // const onAddToCart = (prod) => {
-  //   trackAddToCart(prod);
-  // };
-
   return (
     <div className="product">
       <div className="ProductPageTop">
@@ -640,7 +629,6 @@ export default function Product() {
                 product={product}
                 selectedVariant={selectedVariant}
                 onVariantChange={setSelectedVariant}
-                onAddToCart={onAddToCart}
                 variants={[]}
                 quantity={Number(quantity)}
               />
@@ -655,7 +643,6 @@ export default function Product() {
                   product={product}
                   selectedVariant={selectedVariant}
                   onVariantChange={setSelectedVariant}
-                  onAddToCart={onAddToCart}
                   variants={data?.product?.variants?.nodes || []}
                   quantity={quantity}
                 />
