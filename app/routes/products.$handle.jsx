@@ -332,11 +332,11 @@ export function ProductForm({
     }, {});
   });
 
-  const handleAddToCart = () => {
-    // Track the AddToCart event
-    trackAddToCart(product);
-    onAddToCart(product);
-  };
+  // const handleAddToCart = () => {
+  //   // Track the AddToCart event
+  //   trackAddToCart(product);
+  //   onAddToCart(product);
+  // };
 
   // Sync local state when the parent’s selectedVariant changes
   useEffect(() => {
@@ -565,9 +565,9 @@ export default function Product() {
     setQuantity(1);
   }, [product]);
 
-  useEffect(() => {
-    trackViewContent(product);
-  }, [product]);
+  // useEffect(() => {
+  //   trackViewContent(product);
+  // }, [product]);
 
   useEffect(() => {
     if (selectedVariant?.price) {
@@ -586,9 +586,9 @@ export default function Product() {
     selectedVariant?.compareAtPrice &&
     selectedVariant?.price?.amount !== selectedVariant?.compareAtPrice?.amount;
 
-  const onAddToCart = (prod) => {
-    trackAddToCart(prod);
-  };
+  // const onAddToCart = (prod) => {
+  //   trackAddToCart(prod);
+  // };
 
   return (
     <div className="product">
