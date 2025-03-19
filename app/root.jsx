@@ -145,7 +145,7 @@ export function Layout({children}) {
   const data = useRouteLoaderData('root');
   const navigation = useNavigation();
   const [nprogress, setNProgress] = useState(null); // Store NProgress instance
-  // const clarityId = 'pfyepst8v5'; // Replace with your Clarity project ID
+  const clarityId = 'pu879q40kz'; // Replace with your Clarity project ID
 
   useEffect(() => {
     // Load NProgress once and set it in the state
@@ -180,17 +180,17 @@ export function Layout({children}) {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1" />
-        <meta
+        {/* <meta
           name="google-site-verification"
           content="tGAcrZ3TpRDtQqmjqfYOuQpdBqsLCTr5YzcG7syVPEk"
-        />
+        /> */}
         <Meta />
         <Links />
         <meta
           name="facebook-domain-verification"
           content="ca1idnp1x728fhk6zouywowcqgb2xt"
         />
-        <script
+        {/* <script
           nonce={nonce}
           src="https://www.googletagmanager.com/gtag/js?id=G-3PZN80E9FJ"
         ></script>
@@ -206,13 +206,13 @@ export function Layout({children}) {
               gtag('config', 'G-3PZN80E9FJ');
             `,
           }}
-        ></script>
+        ></script> */}
         <Suspense fallback={null}>
           <MetaPixel pixelId={PIXEL_ID} />
         </Suspense>
       </head>
       <body>
-        {/* <ClarityTracker clarityId={clarityId} /> */}
+        <ClarityTracker clarityId={clarityId} />
         {data ? (
           <Analytics.Provider
             cart={data.cart}
