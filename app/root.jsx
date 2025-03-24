@@ -190,9 +190,9 @@ export function Layout({children}) {
           name="facebook-domain-verification"
           content="ca1idnp1x728fhk6zouywowcqgb2xt"
         />
-        {/* <script
+        <script
           nonce={nonce}
-          src="https://www.googletagmanager.com/gtag/js?id=G-3PZN80E9FJ"
+          src="https://www.googletagmanager.com/gtag/js?id=G-KW81WPYWZN"
         ></script>
 
         <script
@@ -203,10 +203,10 @@ export function Layout({children}) {
               function gtag(){dataLayer.push(arguments);}
               gtag('js', new Date());
 
-              gtag('config', 'G-3PZN80E9FJ');
+              gtag('config', 'G-KW81WPYWZN');
             `,
           }}
-        ></script> */}
+        ></script>
         <Suspense fallback={null}>
           <MetaPixel pixelId={PIXEL_ID} />
         </Suspense>
