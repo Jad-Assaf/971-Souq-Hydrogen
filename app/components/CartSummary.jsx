@@ -39,55 +39,26 @@ export function CartSummary({cart, layout}) {
 /**
  * @param {{checkoutUrl?: string}}
  */
-export default function CartCheckoutActions({checkoutUrl, cartTotal = 0}) {
-  const [showAlert, setShowAlert] = useState(false);
-
-  // Hide the alert if the subtotal drops below $5000
-  useEffect(() => {
-    if (cartTotal < 5000 && showAlert) {
-      setShowAlert(false);
-    }
-  }, [cartTotal, showAlert]);
+export default function CartCheckoutActions({checkoutUrl}) {
+  if (!checkoutUrl) return null;
 
   const handleButtonClick = () => {
-    if (cartTotal > 5000) {
-      // Prevent navigation, show alert
-      setShowAlert(true);
-    } else {
-      // Navigate to checkout
-      window.location.href = checkoutUrl;
-    }
+    window.location.href = checkoutUrl;
   };
-
-  if (!checkoutUrl) return null;
 
   return (
     <div className="cart-checkout-container">
       <button
         type="button"
-        className={`cart-checkout-button ${
-          cartTotal > 5000 ? 'disabled-look' : ''
-        }`}
+        className="cart-checkout-button"
         onClick={handleButtonClick}
       >
         Continue to Checkout &nbsp; &rarr;
       </button>
-
-      {showAlert && (
-        <div className="alert-box">
-          <span className="alert-icon">&times;</span>
-          <span className="alert-message">
-            We apologize for any inconvenience! Your order is above $5000.
-            Please contact sales to proceed.{' '}
-            <a className="cart-err-msg-link" href="https://wa.me/9613020030">
-              +961 03 020 030
-            </a>
-          </span>
-        </div>
-      )}
     </div>
   );
 }
+
 
 /**
  * @param {{
