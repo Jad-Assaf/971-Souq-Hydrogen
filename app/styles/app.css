@@ -455,6 +455,7 @@ button {
 .discountedPrice {
   color: rgb(255, 79, 79);
   text-decoration: line-through;
+  display: none;
 }
 
 .add-to-cart-button {
