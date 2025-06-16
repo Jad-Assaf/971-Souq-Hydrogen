@@ -42,9 +42,6 @@ const PIXEL_ID = '321309553208857'; // Replace with your actual Pixel ID
 
 export function links() {
   return [
-    {rel: 'stylesheet', href: appStyles},
-    {rel: 'stylesheet', href: resetStyles},
-    {rel: 'stylesheet', href: tailwindCss},
     {rel: 'preconnect', href: 'https://cdn.shopify.com'},
     {rel: 'preconnect', href: 'https://shop.app'},
     // {rel: 'icon', type: 'image/svg+xml', href: favicon},
@@ -179,7 +176,10 @@ export function Layout({children}) {
     <html lang="en">
       <head>
         <meta charSet="utf-8" />
-        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />+{' '}
+        <link rel="stylesheet" href={resetStyles}></link>
+        <link rel="stylesheet" href={appStyles}></link>
+        <link rel="stylesheet" href={tailwindCss}></link>
         {/* <meta
           name="google-site-verification"
           content="tGAcrZ3TpRDtQqmjqfYOuQpdBqsLCTr5YzcG7syVPEk"
@@ -194,7 +194,6 @@ export function Layout({children}) {
           nonce={nonce}
           src="https://www.googletagmanager.com/gtag/js?id=G-KW81WPYWZN"
         ></script>
-
         <script
           nonce={nonce}
           dangerouslySetInnerHTML={{
