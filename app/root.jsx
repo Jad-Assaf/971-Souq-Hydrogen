@@ -10,7 +10,6 @@ import {
   ScrollRestoration,
   isRouteErrorResponse,
   useNavigation,
-  LiveReload,
 } from '@remix-run/react';
 // import favicon from '~/assets/macarabia-favicon-black_32x32.jpg';
 import resetStyles from '~/styles/reset.css?url';
@@ -223,7 +222,6 @@ export function Layout({children}) {
         )}
         <ScrollRestoration nonce={nonce} />
         <Scripts nonce={nonce} />
-        <LiveReload nonce={nonce} />
       </body>
     </html>
   );
