@@ -839,12 +839,10 @@ export default function Product() {
 
       <div className="related-products-row">
         <div className="related-products">
-          <h2>Related Products</h2>
           <RelatedProductsRow products={relatedProducts || []} />
         </div>
       </div>
       <div className="recently-viewed-container">
-        <h2>Recently Viewed Products</h2>
         <RecentlyViewedProducts currentProductId={product.id} />
       </div>
     </div>
