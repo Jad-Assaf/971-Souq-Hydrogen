@@ -1,6 +1,5 @@
 import React from 'react';
-import {defer} from '@shopify/remix-oxygen';
-import {useLoaderData} from '@remix-run/react';
+import {data, useLoaderData} from '@remix-run/react';
 import {BannerSlideshow} from '../components/BannerSlideshow';
 import {CategorySlider} from '~/components/CollectionSlider';
 import {TopProductSections} from '~/components/TopProductSections';
@@ -92,7 +91,7 @@ export async function loader(args) {
   // Check if data is in cache
   const cachedData = cache.get(cacheKey);
   if (cachedData && cachedData.expiry > now) {
-    return defer(cachedData.value, {
+    return data(cachedData.value, {
       headers: {
         'Cache-Control': 'public, max-age=86400, stale-while-revalidate=3600',
       },
@@ -231,7 +230,7 @@ export async function loader(args) {
   // Cache the new data
   cache.set(cacheKey, {value: newData, expiry: now + cacheTTL});
 
-  return defer(newData, {
+  return data(newData, {
     headers: {
       'Cache-Control': 'public, max-age=86400, stale-while-revalidate=3600',
     },

@@ -1,6 +1,6 @@
 import React, {Suspense, useEffect, useState} from 'react';
-import {defer, redirect} from '@shopify/remix-oxygen';
-import {Await, useLoaderData, useLocation} from '@remix-run/react';
+import {redirect} from '@shopify/remix-oxygen';
+import {Await, data, useLoaderData, useLocation} from '@remix-run/react';
 import {
   getSelectedProductOptions,
   Analytics,
@@ -176,7 +176,7 @@ export async function loader(args) {
   const deferredData = loadDeferredData(args);
   const criticalData = await loadCriticalData(args);
 
-  return defer({...deferredData, ...criticalData});
+  return data({...deferredData, ...criticalData});
 }
 
 async function loadCriticalData({context, params, request}) {

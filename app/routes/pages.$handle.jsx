@@ -1,5 +1,4 @@
-import {defer} from '@shopify/remix-oxygen';
-import {useLoaderData} from '@remix-run/react';
+import {data, useLoaderData} from '@remix-run/react';
 
 /**
  * @type {MetaFunction<typeof loader>}
@@ -18,7 +17,7 @@ export async function loader(args) {
   // Await the critical data required to render initial state of the page
   const criticalData = await loadCriticalData(args);
 
-  return defer({...deferredData, ...criticalData});
+  return data({...deferredData, ...criticalData});
 }
 
 /**

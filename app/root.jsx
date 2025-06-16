@@ -1,6 +1,5 @@
 // src/root.jsx
 import {useNonce, getShopAnalytics, Analytics} from '@shopify/hydrogen';
-import {defer} from '@shopify/remix-oxygen';
 import {
   Links,
   Meta,
@@ -31,11 +30,10 @@ export const shouldRevalidate = ({
   formMethod,
   currentUrl,
   nextUrl,
-  defaultShouldRevalidate,
 }) => {
   if (formMethod && formMethod !== 'GET') return true;
   if (currentUrl.toString() === nextUrl.toString()) return true;
-  return defaultShouldRevalidate;
+  return false;
 };
 
 const PIXEL_ID = '321309553208857'; // Replace with your actual Pixel ID
@@ -57,7 +55,7 @@ export async function loader(args) {
     const criticalData = await loadCriticalData(args);
     const {storefront, env} = args.context;
 
-    return defer({
+    return ({
       ...deferredData,
       ...criticalData,
       publicStoreDomain: env.PUBLIC_STORE_DOMAIN,
@@ -176,7 +174,7 @@ export function Layout({children}) {
     <html lang="en">
       <head>
         <meta charSet="utf-8" />
-        <meta name="viewport" content="width=device-width,initial-scale=1" />+{' '}
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
         <link rel="stylesheet" href={resetStyles}></link>
         <link rel="stylesheet" href={appStyles}></link>
         <link rel="stylesheet" href={tailwindCss}></link>

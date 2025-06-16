@@ -1,10 +1,11 @@
-import {defer, redirect} from '@shopify/remix-oxygen';
+import {redirect} from '@shopify/remix-oxygen';
 import {
   useLoaderData,
   Link,
   useSearchParams,
   useLocation,
   useNavigate,
+  data,
 } from '@remix-run/react';
 import {
   getPaginationVariables,
@@ -198,7 +199,7 @@ export const meta = ({data}) => {
 export async function loader(args) {
   const deferredData = loadDeferredData(args);
   const criticalData = await loadCriticalData(args);
-  return defer({...deferredData, ...criticalData});
+  return data({...deferredData, ...criticalData});
 }
 
 /**

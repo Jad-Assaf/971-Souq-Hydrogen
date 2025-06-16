@@ -1,4 +1,3 @@
-import {json} from '@shopify/remix-oxygen';
 import {
   useLoaderData,
   useSearchParams,
@@ -35,13 +34,13 @@ export async function loader({request, context}) {
       console.error('Predictive Search Error:', error);
       return {type: 'predictive', term: '', result: null, error: error.message};
     });
-    return json({
+    return {
       ...result,
       vendors: [],
       productTypes: [],
       // No pagination needed for predictive results
       pageInfo: {},
-    });
+    };
   }
 
   // -----------------------------------------
@@ -166,11 +165,11 @@ export async function loader({request, context}) {
     ),
   ].sort();
 
-  return json({
+  return {
     ...result,
     vendors: filteredVendors,
     productTypes: filteredProductTypes,
-  });
+  };
 }
 
 /* ------------------------------------------------------------------

@@ -1,4 +1,3 @@
-import {json} from '@shopify/remix-oxygen';
 import {Link, useLoaderData} from '@remix-run/react';
 import "../styles/Policies.css"
 
@@ -38,7 +37,7 @@ export async function loader({params, context}) {
     throw new Response('Could not find the policy', {status: 404});
   }
 
-  return json({policy});
+  return {policy};
 }
 
 export default function Policy() {
