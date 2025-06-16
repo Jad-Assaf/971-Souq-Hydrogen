@@ -71,6 +71,8 @@ export default defineConfig({
        * @see https://vitejs.dev/config/dep-optimization-options
        */
       include: [
+        'set-cookie-parser',
+        'cookie',
         'react-microsoft-clarity',
         'react-lazy-load-image-component',
         'prop-types',
