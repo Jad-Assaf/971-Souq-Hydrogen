@@ -101,9 +101,9 @@ export async function loader(args) {
   const banners = [
     {
       desktopImageUrl:
-        'https://cdn.shopify.com/s/files/1/0765/3782/3562/files/s26.png?v=1775132377',
+        'https://cdn.shopify.com/s/files/1/0765/3782/3562/files/neo.jpg?v=1775132378',
       mobileImageUrl:
-        'https://cdn.shopify.com/s/files/1/0765/3782/3562/files/s26.png?v=1775132377',
+        'https://cdn.shopify.com/s/files/1/0765/3782/3562/files/neo.jpg?v=1775132378',
       link: '/collections/apple-macbook',
     },
     // {

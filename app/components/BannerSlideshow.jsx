@@ -210,14 +210,14 @@ const styles = {
     top: 0,
     left: 0,
     width: '100vw',
-    height: '100%',
+    height: 'auto',
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'start',
   },
   bannerImage: {
     width: '100vw',
-    height: '100%',
+    height: 'auto',
     objectFit: 'contain',
     maxWidth: '1500px',
     margin: 'auto',
@@ -225,7 +225,7 @@ const styles = {
   },
   link: {
     width: '100vw',
-    height: '100%',
+    height: 'auto',
     display: 'block',
   },
   progressBar: {
