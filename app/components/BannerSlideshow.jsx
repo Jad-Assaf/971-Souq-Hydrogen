@@ -97,9 +97,9 @@ export function BannerSlideshow({banners, interval = 10000}) {
         >
           <img
             src={banner.desktopImageUrl}
-            srcSet={`${banner.desktopImageUrl}?width=300&quality=50 300w,
-                   ${banner.desktopImageUrl}?width=600&quality=50 600w,
-                   ${banner.desktopImageUrl}?width=1200&quality=50 1200w`}
+            srcSet={`${banner.desktopImageUrl}?width=300 300w,
+                   ${banner.desktopImageUrl}?width=600 600w,
+                   ${banner.desktopImageUrl}?width=1200 1200w`}
             sizes="(max-width: 768px) 100vw, 50vw"
             alt={`Banner ${index + 1}`}
             style={styles.bannerImage}
@@ -138,9 +138,9 @@ export function BannerSlideshow({banners, interval = 10000}) {
         >
           <img
             src={banner.mobileImageUrl}
-            srcSet={`${banner.mobileImageUrl}?width=300&quality=50 300w,
-                   ${banner.mobileImageUrl}?width=600&quality=50 600w,
-                   ${banner.mobileImageUrl}?width=1200&quality=50 1200w`}
+            srcSet={`${banner.mobileImageUrl}?width=300 300w,
+                   ${banner.mobileImageUrl}?width=600 600w,
+                   ${banner.mobileImageUrl}?width=1200 1200w`}
             sizes="(max-width: 768px) 100vw, 50vw"
             alt={`Banner ${index + 1}`}
             style={styles.bannerImage}
