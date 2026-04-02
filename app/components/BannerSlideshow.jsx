@@ -204,6 +204,7 @@ const styles = {
     position: 'relative',
     width: '100vw',
     overflow: 'hidden',
+    maxHeight: '836px'
   },
   bannerSlide: {
     position: 'absolute',
