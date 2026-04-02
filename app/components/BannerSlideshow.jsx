@@ -221,7 +221,7 @@ const styles = {
     objectFit: 'contain',
     maxWidth: '1500px',
     margin: 'auto',
-    borderRadius: '20px',
+    borderRadius: '10px',
   },
   link: {
     width: '100vw',
